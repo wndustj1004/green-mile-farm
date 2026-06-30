@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import exifr from 'exifr'
-import { useDaumPostcodePopup } from 'react-daum-postcode'
 import { createClient } from '@/lib/supabase/client'
 import { TRANSPORTS, type TransportKey } from '@/lib/transport'
-import { submitCertification, calcDistanceAction, type CertifyResult } from './actions'
+import { submitCertification, calcDistanceByCoordsAction, type CertifyResult } from './actions'
+import MapPicker, { type LatLng } from './MapPicker'
 
 const PHOTO_SLOTS = [
   { key: 'start1', label: '시작 · 현장 촬영' },
@@ -19,13 +19,14 @@ const PHOTO_SLOTS = [
 export default function CertifyForm({ userId }: { userId: string }) {
   const router = useRouter()
   const supabase = createClient()
-  const openPostcode = useDaumPostcodePopup()
 
   const [transport, setTransport] = useState<TransportKey | ''>('')
   const [mode, setMode] = useState<'auto' | 'manual'>('auto')
   const [distance, setDistance] = useState('')
   const [startAddress, setStartAddress] = useState('')
   const [endAddress, setEndAddress] = useState('')
+  const [startCoord, setStartCoord] = useState<LatLng | null>(null)
+  const [endCoord, setEndCoord] = useState<LatLng | null>(null)
   const [files, setFiles] = useState<Record<string, File | null>>({})
   const [previews, setPreviews] = useState<Record<string, string>>({})
   const [calcInfo, setCalcInfo] = useState('')
@@ -33,6 +34,8 @@ export default function CertifyForm({ userId }: { userId: string }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<CertifyResult | null>(null)
+
+  const bothPins = !!startCoord && !!endCoord
 
   function setFile(slot: string, file: File | null) {
     setError('')
@@ -56,23 +59,26 @@ export default function CertifyForm({ userId }: { userId: string }) {
     setFiles((prev) => ({ ...prev, [slot]: file }))
   }
 
-  function searchAddress(which: 'start' | 'end') {
-    openPostcode({
-      onComplete: (data) => {
-        if (which === 'start') setStartAddress(data.address)
-        else setEndAddress(data.address)
-      },
-    })
+  // 지도에서 핀을 찍거나 옮길 때마다 좌표·주소 갱신 + 기존 거리값 초기화(재계산 유도)
+  function handlePinChange(which: 'start' | 'end', coord: LatLng, address: string) {
+    if (which === 'start') {
+      setStartCoord(coord)
+      setStartAddress(address)
+    } else {
+      setEndCoord(coord)
+      setEndAddress(address)
+    }
+    setDistance('')
+    setCalcInfo('')
   }
 
-  // 주소 → 카카오 자동 거리 계산
+  // 핀 좌표로 거리 계산 (텍스트 지오코딩 안 함 → 같은 핀이면 항상 같은 값)
   async function handleCalc() {
     setError('')
     setCalcInfo('')
-    if (!startAddress.trim() || !endAddress.trim())
-      return setError('시작/종료 주소를 먼저 입력해주세요.')
+    if (!startCoord || !endCoord) return setError('출발·도착 핀을 모두 찍어주세요.')
     setCalcLoading(true)
-    const res = await calcDistanceAction(startAddress, endAddress)
+    const res = await calcDistanceByCoordsAction(startCoord, endCoord)
     setCalcLoading(false)
     if ('error' in res) return setError(res.error)
     setDistance(String(res.km))
@@ -84,6 +90,7 @@ export default function CertifyForm({ userId }: { userId: string }) {
     setError('')
 
     if (!transport) return setError('교통수단을 선택해주세요.')
+    if (mode === 'auto' && !bothPins) return setError('지도에서 출발·도착 핀을 모두 찍어주세요.')
     const dist = parseFloat(distance)
     if (!dist || dist <= 0)
       return setError(
@@ -104,24 +111,18 @@ export default function CertifyForm({ userId }: { userId: string }) {
         const file = files[slot.key]
         if (!file) continue
         try {
-          exif[slot.key] = await exifr.parse(file, [
-            'DateTimeOriginal',
-            'GPSLatitude',
-            'GPSLongitude',
-          ])
+          exif[slot.key] = await exifr.parse(file, ['DateTimeOriginal', 'GPSLatitude', 'GPSLongitude'])
         } catch {
           exif[slot.key] = null
         }
         const ext = file.name.split('.').pop() || 'jpg'
         const path = `${userId}/${Date.now()}_${slot.key}.${ext}`
-        const { error: upErr } = await supabase.storage
-          .from('certification-photos')
-          .upload(path, file)
+        const { error: upErr } = await supabase.storage.from('certification-photos').upload(path, file)
         if (upErr) throw new Error('사진 업로드 실패: ' + upErr.message)
         photos[slot.key] = path
       }
 
-      // 2) 서버 등록 (거리·CO₂ 계산은 서버에서)
+      // 2) 서버 등록 (CO₂ 계산은 서버에서)
       const res = await submitCertification({
         transport: transport as TransportKey,
         distanceKm: dist,
@@ -205,46 +206,51 @@ export default function CertifyForm({ userId }: { userId: string }) {
                         : 'border-gray-200 text-gray-600'
                     }`}
                   >
-                    {m === 'auto' ? '주소로 자동 계산' : '직접 입력'}
+                    {m === 'auto' ? '지도에서 핀 찍기' : '직접 입력'}
                   </button>
                 ))}
               </div>
 
-              {/* 시작/종료 위치 */}
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input className={inputCls} value={startAddress} onChange={(e) => setStartAddress(e.target.value)} placeholder="시작 위치 (예: 전남대 정문)" />
-                  {mode === 'auto' && (
-                    <button type="button" onClick={() => searchAddress('start')} className="shrink-0 rounded-lg bg-gray-100 px-2 text-xs text-gray-600 hover:bg-gray-200">
-                      주소검색
-                    </button>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <input className={inputCls} value={endAddress} onChange={(e) => setEndAddress(e.target.value)} placeholder="종료 위치 (예: 광주역)" />
-                  {mode === 'auto' && (
-                    <button type="button" onClick={() => searchAddress('end')} className="shrink-0 rounded-lg bg-gray-100 px-2 text-xs text-gray-600 hover:bg-gray-200">
-                      주소검색
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* 거리 값 */}
               {mode === 'auto' ? (
-                <div className="mt-3">
-                  <button type="button" onClick={handleCalc} disabled={calcLoading} className="w-full rounded-lg border border-green-600 py-2 text-sm font-medium text-green-700 hover:bg-green-50 disabled:opacity-50">
+                <div>
+                  <MapPicker
+                    initialStart={startCoord}
+                    initialEnd={endCoord}
+                    onChange={handlePinChange}
+                  />
+
+                  {/* 핀이 채운 주소(표시·기록용) */}
+                  <div className="mt-2 space-y-1 text-xs">
+                    <p className="text-gray-600">
+                      🟢 출발: {startAddress || <span className="text-gray-400">지도에서 핀을 찍어주세요</span>}
+                    </p>
+                    <p className="text-gray-600">
+                      🔴 도착: {endAddress || <span className="text-gray-400">지도에서 핀을 찍어주세요</span>}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCalc}
+                    disabled={!bothPins || calcLoading}
+                    className="mt-3 w-full rounded-lg border border-green-600 py-2 text-sm font-medium text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                  >
                     {calcLoading ? '계산 중...' : '📍 거리 자동 계산'}
                   </button>
-                  {distance && (
-                    <p className="mt-2 text-center text-sm font-semibold text-gray-700">
-                      이동 거리: {distance} km
+                  {!bothPins && (
+                    <p className="mt-1 text-center text-xs text-gray-400">
+                      출발·도착 핀을 모두 찍으면 계산할 수 있어요.
                     </p>
+                  )}
+                  {distance && (
+                    <p className="mt-2 text-center text-sm font-semibold text-gray-700">이동 거리: {distance} km</p>
                   )}
                   {calcInfo && <p className="mt-1 text-center text-xs text-gray-400">{calcInfo}</p>}
                 </div>
               ) : (
-                <div className="mt-3">
+                <div className="space-y-2">
+                  <input className={inputCls} value={startAddress} onChange={(e) => setStartAddress(e.target.value)} placeholder="시작 위치 (예: 전남대 정문)" />
+                  <input className={inputCls} value={endAddress} onChange={(e) => setEndAddress(e.target.value)} placeholder="종료 위치 (예: 광주역)" />
                   <input type="number" step="0.1" min="0" className={inputCls} value={distance} onChange={(e) => setDistance(e.target.value)} placeholder="이동 거리 km (예: 2.5)" />
                 </div>
               )}
@@ -278,7 +284,11 @@ export default function CertifyForm({ userId }: { userId: string }) {
 
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
-            <button type="submit" disabled={loading} className="w-full rounded-lg bg-green-600 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={loading || (mode === 'auto' && !bothPins)}
+              className="w-full rounded-lg bg-green-600 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
               {loading ? '등록 중...' : '등록하기'}
             </button>
           </form>

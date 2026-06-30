@@ -81,3 +81,22 @@ export async function calcDistanceKm(
   const straight = haversineKm(start, end)
   return { km: Math.round(straight * 100) / 100, method: '직선 거리(근사)' }
 }
+
+// 지도 핀 좌표로 거리 계산 (텍스트 지오코딩을 거치지 않음 → 같은 좌표면 항상 같은 결과).
+// 도로경로 계산 로직(routeKm)은 그대로 재사용.
+export async function calcDistanceByCoords(
+  start: { lat: number; lng: number },
+  end: { lat: number; lng: number }
+): Promise<{ km: number; method: string } | { error: string }> {
+  if (!process.env.KAKAO_REST_API_KEY) {
+    return { error: '카카오 키가 설정되지 않았습니다. 직접 입력을 사용해주세요.' }
+  }
+  const o = { lng: start.lng, lat: start.lat }
+  const d = { lng: end.lng, lat: end.lat }
+
+  const route = await routeKm(o, d)
+  if (route != null) return { km: Math.round(route * 100) / 100, method: '도로 경로' }
+
+  const straight = haversineKm(o, d)
+  return { km: Math.round(straight * 100) / 100, method: '직선 거리(근사)' }
+}

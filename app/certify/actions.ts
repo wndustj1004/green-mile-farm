@@ -1,15 +1,26 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { calcDistanceKm } from '@/lib/kakao'
+import { calcDistanceKm, calcDistanceByCoords } from '@/lib/kakao'
 import { EMISSION_COLUMN, TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
 
-// 주소 → 카카오 거리 자동 계산 (5-B)
+type LatLng = { lat: number; lng: number }
+
+// 주소 텍스트 → 카카오 거리 자동 계산 (구버전, 직접입력 보조용으로 유지)
 export async function calcDistanceAction(startQuery: string, endQuery: string) {
   if (!startQuery?.trim() || !endQuery?.trim()) {
     return { error: '시작/종료 주소를 모두 입력해주세요.' }
   }
   return await calcDistanceKm(startQuery, endQuery)
+}
+
+// 지도 핀 좌표 → 카카오 거리 자동 계산 (현재 폼이 사용)
+export async function calcDistanceByCoordsAction(
+  start: LatLng | null,
+  end: LatLng | null
+) {
+  if (!start || !end) return { error: '출발·도착 핀을 모두 찍어주세요.' }
+  return await calcDistanceByCoords(start, end)
 }
 
 export type CertifyInput = {
