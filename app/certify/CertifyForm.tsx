@@ -107,75 +107,73 @@ export default function CertifyForm({ userId }: { userId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-green-50 px-4 py-8">
+    <main className="min-h-screen bg-gm-cream2 px-5 py-8">
       <div className="mx-auto max-w-md">
-        <div className="mb-4">
-          <Link href="/dashboard" className="text-sm text-gray-400 hover:text-gray-600">
-            ← 대시보드
-          </Link>
-        </div>
+        <Link href="/dashboard" className="text-[13px] text-gm-muted2 hover:text-gm-muted">
+          ← 대시보드
+        </Link>
+        <h1 className="mt-3.5 text-[22px] font-bold tracking-tight text-gm-ink2">이동 인증하기 🚶</h1>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-gm-muted">
+          교통수단을 갈아탔다면 <b className="text-gm-green">동선을 추가</b>해 구간별로 인증하세요.
+        </p>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <h1 className="mb-1 text-xl font-bold text-green-700">이동 인증하기 🚶</h1>
-          <p className="mb-5 text-sm text-gray-500">
-            교통수단을 갈아탔다면 <b>동선을 추가</b>해 구간별로 인증하세요!
-          </p>
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3.5">
+          {legs.map((leg, i) => (
+            <LegBlock
+              key={i}
+              leg={leg}
+              index={i}
+              total={legs.length}
+              update={(partial) => updateLeg(i, partial)}
+              setError={setError}
+            />
+          ))}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {legs.map((leg, i) => (
-              <LegBlock
-                key={i}
-                leg={leg}
-                index={i}
-                total={legs.length}
-                update={(partial) => updateLeg(i, partial)}
-                setError={setError}
-              />
-            ))}
+          {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
-            {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+          {!allComplete && (
+            <p className="text-center text-xs text-gm-muted2">
+              모든 동선의 교통수단·핀·사진을 완성하면 등록·추가가 가능해요.
+            </p>
+          )}
 
-            {!allComplete && (
-              <p className="text-center text-xs text-gray-400">
-                모든 동선의 교통수단·핀·사진을 완성하면 등록·추가가 가능해요.
-              </p>
-            )}
+          <button
+            type="submit"
+            disabled={loading || !allComplete}
+            className="w-full rounded-full bg-gm-green py-4 text-[15px] font-bold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {loading ? '등록 중...' : `등록하기 (동선 ${legs.length}개)`}
+          </button>
 
-            <button
-              type="submit"
-              disabled={loading || !allComplete}
-              className="w-full rounded-lg bg-green-600 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? '등록 중...' : `등록하기 (동선 ${legs.length}개)`}
-            </button>
-
-            <button
-              type="button"
-              onClick={addLeg}
-              disabled={!allComplete || legs.length >= MAX_LEGS}
-              className="w-full rounded-lg border border-green-600 py-3 font-semibold text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
-            >
-              {legs.length >= MAX_LEGS ? '동선은 최대 5개까지예요' : '+ 추가 동선 입력하기'}
-            </button>
-          </form>
-        </div>
+          <button
+            type="button"
+            onClick={addLeg}
+            disabled={!allComplete || legs.length >= MAX_LEGS}
+            className="w-full rounded-full border-[1.5px] border-[#bcd0a8] py-3 text-sm font-bold text-gm-green hover:bg-gm-sage disabled:cursor-not-allowed disabled:border-gm-line disabled:text-gm-muted2"
+          >
+            {legs.length >= MAX_LEGS ? '동선은 최대 5개까지예요' : '＋ 추가 동선 입력하기'}
+          </button>
+        </form>
       </div>
 
       {/* 결과 모달 (동선 개수만큼 순차 표시) */}
       {results && results[modalIndex] && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl">
             <div className="text-5xl">🌱</div>
-            <h2 className="mt-3 text-lg font-bold text-green-700">
-              인증 완료! {results.length > 1 && <span className="text-sm text-gray-400">(동선 {modalIndex + 1})</span>}
+            <h2 className="mt-3 text-lg font-bold text-gm-green">
+              인증 완료! {results.length > 1 && <span className="text-sm text-gm-muted2">(동선 {modalIndex + 1})</span>}
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-gray-700">
+            <p className="mt-3 text-sm leading-relaxed text-gm-body">
               <b>{results[modalIndex].name}</b>님이 <b>{results[modalIndex].startAddress}</b>에서{' '}
               <b>{results[modalIndex].endAddress}</b>까지 <b>{results[modalIndex].transportLabel}</b>으로{' '}
               <b>{results[modalIndex].distanceKm}km</b>를 이동하면서 감축된 CO₂량은 차량 이용 대비{' '}
-              <b className="text-green-700">{results[modalIndex].co2Kg.toFixed(2)} kgCO₂</b>입니다.
+              <b className="text-gm-green">{results[modalIndex].co2Kg.toFixed(2)} kgCO₂</b>입니다.
             </p>
-            <button onClick={nextModal} className="mt-5 w-full rounded-lg bg-green-600 py-3 font-semibold text-white hover:bg-green-700">
+            <button
+              onClick={nextModal}
+              className="mt-5 w-full rounded-full bg-gm-green py-3 font-bold text-white hover:opacity-90"
+            >
               확인 ({modalIndex + 1}/{results.length})
             </button>
           </div>
