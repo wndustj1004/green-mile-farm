@@ -38,6 +38,8 @@ create table if not exists public.certifications (
   exif_data     jsonb,                                 -- 사진 메타데이터(촬영시각·GPS)
   status        text not null default 'approved'       -- 자동 승인 + 운영진 사후 반려 구조
                  check (status in ('approved','rejected')),
+  processed_at  timestamptz,                            -- 관리자가 승인/반려한 시각
+  reject_reason text,                                   -- 반려 사유(반려 시에만)
   created_at    timestamptz not null default now()
 );
 
