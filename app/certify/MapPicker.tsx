@@ -35,7 +35,9 @@ export default function MapPicker({
   const labels = useRef<{ start: any | null; end: any | null }>({ start: null, end: null })
   const targetRef = useRef<'start' | 'end'>('start')
 
-  const [target, setTarget] = useState<'start' | 'end'>('start')
+  const [target, setTarget] = useState<'start' | 'end'>(
+    initialStart && !initialEnd ? 'end' : 'start'
+  )
   const [ready, setReady] = useState(false)
   const [sdkError, setSdkError] = useState('')
   const [query, setQuery] = useState('')
@@ -67,9 +69,9 @@ export default function MapPicker({
           placePin(targetRef.current, ll.getLat(), ll.getLng(), true)
         })
 
-        // 다른 입력방식에서 돌아왔을 때 기존 핀 복원
-        if (initialStart) placePin('start', initialStart.lat, initialStart.lng, false)
-        if (initialEnd) placePin('end', initialEnd.lat, initialEnd.lng, false)
+        // 기존 핀 복원(자동 채움 등): 마커만 조용히 표시(재계산·보고 안 함)
+        if (initialStart) placePin('start', initialStart.lat, initialStart.lng, false, false)
+        if (initialEnd) placePin('end', initialEnd.lat, initialEnd.lng, false, false)
 
         setReady(true)
       })
@@ -95,7 +97,13 @@ export default function MapPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function placePin(which: 'start' | 'end', lat: number, lng: number, advance: boolean) {
+  function placePin(
+    which: 'start' | 'end',
+    lat: number,
+    lng: number,
+    advance: boolean,
+    report = true
+  ) {
     const kakao = getKakao()
     const pos = new kakao.maps.LatLng(lat, lng)
 
@@ -113,7 +121,7 @@ export default function MapPicker({
     }
 
     setLabel(which, lat, lng)
-    normalizeAndReport(which, lat, lng)
+    if (report) normalizeAndReport(which, lat, lng)
 
     // 출발을 처음 찍으면 자동으로 '도착' 선택으로 넘어가 편하게
     if (advance && which === 'start' && !markers.current.end) setTarget('end')

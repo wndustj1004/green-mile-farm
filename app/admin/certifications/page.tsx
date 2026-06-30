@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
-import { setCertStatus } from '../actions'
+import CertActions from './CertActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,23 +80,18 @@ export default async function AdminCertsPage() {
               사진 메타데이터: {summarizeExif(c.exif_data)}
             </p>
 
-            {/* 승인/반려 */}
-            <div className="mt-3 flex gap-2">
-              <form action={setCertStatus}>
-                <input type="hidden" name="id" value={c.id} />
-                <input type="hidden" name="status" value="approved" />
-                <button className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700">
-                  승인
-                </button>
-              </form>
-              <form action={setCertStatus}>
-                <input type="hidden" name="id" value={c.id} />
-                <input type="hidden" name="status" value="rejected" />
-                <button className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600">
-                  반려
-                </button>
-              </form>
-            </div>
+            {/* 처리 정보 (처리 시각·반려 사유) */}
+            {c.processed_at && (
+              <p className="mt-2 text-xs text-gray-400">
+                처리 시각: {new Date(c.processed_at).toLocaleString('ko-KR')}
+                {c.status === 'rejected' && c.reject_reason && (
+                  <span className="mt-0.5 block text-red-500">반려 사유: {c.reject_reason}</span>
+                )}
+              </p>
+            )}
+
+            {/* 승인/반려 (반려는 사유 입력 모달) */}
+            <CertActions id={c.id} />
           </div>
         )
       })}

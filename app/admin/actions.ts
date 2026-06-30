@@ -12,16 +12,30 @@ export async function checkAdmin() {
   return data?.is_admin === true
 }
 
-// 인증 승인/반려
-export async function setCertStatus(formData: FormData) {
-  if (!(await checkAdmin())) return
+// 인증 승인/반려 — 처리 시각·반려 사유 기록
+export async function reviewCert(
+  id: string,
+  status: 'approved' | 'rejected',
+  reason?: string
+): Promise<{ error: string } | { ok: true }> {
+  if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
+  if (!id || !['approved', 'rejected'].includes(status)) return { error: '잘못된 요청입니다.' }
+  if (status === 'rejected' && !reason?.trim()) return { error: '반려 사유를 입력해주세요.' }
+
   const supabase = createClient()
-  const id = formData.get('id') as string
-  const status = formData.get('status') as string
-  if (!id || !['approved', 'rejected'].includes(status)) return
-  await supabase.from('certifications').update({ status }).eq('id', id)
+  const { error } = await supabase
+    .from('certifications')
+    .update({
+      status,
+      processed_at: new Date().toISOString(),
+      reject_reason: status === 'rejected' ? reason!.trim() : null,
+    })
+    .eq('id', id)
+
+  if (error) return { error: '처리 실패: ' + error.message }
   revalidatePath('/admin/certifications')
   revalidatePath('/admin')
+  return { ok: true }
 }
 
 export type SettingsInput = {

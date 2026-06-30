@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getGrowth } from '@/lib/growth'
+import StageSlider from './StageSlider'
 import { logoutAction } from './actions'
 
 export const dynamic = 'force-dynamic' // 항상 최신 데이터로 렌더
@@ -25,7 +26,7 @@ export default async function DashboardPage() {
     .select('target_co2_kg')
     .eq('id', 1)
     .single()
-  const targetKg = Number(settings?.target_co2_kg ?? 3)
+  const targetKg = Number(settings?.target_co2_kg ?? 5)
 
   // 3) 내 인증 내역(승인된 것만) → 통계 집계
   const { data: certs } = await supabase
@@ -101,12 +102,23 @@ export default async function DashboardPage() {
           <StatCard label="누적 감축" value={`${totalKg.toFixed(2)}kg`} />
         </div>
 
+        {/* 작물 성장 단계 슬라이더 */}
+        <StageSlider targetKg={targetKg} totalKg={totalKg} />
+
         {/* 작물 키우기 버튼 */}
         <Link
           href="/certify"
           className="mt-5 block rounded-xl bg-green-600 py-4 text-center text-lg font-semibold text-white shadow-sm hover:bg-green-700"
         >
           🚶 작물 키우기 (이동 인증하기)
+        </Link>
+
+        {/* 인증 내용 보기 */}
+        <Link
+          href="/my"
+          className="mt-3 block rounded-xl border border-green-600 py-3 text-center font-semibold text-green-700 hover:bg-green-100"
+        >
+          📋 인증 내용 보기
         </Link>
       </div>
     </main>
