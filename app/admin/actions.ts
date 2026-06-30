@@ -77,3 +77,108 @@ export async function updateSettings(
   revalidatePath('/dashboard')
   return { ok: true }
 }
+
+// =============================================================
+//  랜딩 소개 섹션 관리 (메인페이지 아래 스크롤 영역)
+// =============================================================
+
+export type LandingSection = {
+  id: string
+  sort_order: number
+  emoji: string
+  title: string
+  body: string
+  visible: boolean
+}
+
+export type SectionEdit = {
+  emoji: string
+  title: string
+  body: string
+  visible: boolean
+}
+
+// 새 섹션 추가 (맨 아래에 빈 섹션 생성)
+export async function createSection(): Promise<{ error: string } | { ok: true }> {
+  if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
+  const supabase = createClient()
+  const { data: maxRow } = await supabase
+    .from('landing_sections')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const nextOrder = (maxRow?.sort_order ?? 0) + 1
+  const { error } = await supabase
+    .from('landing_sections')
+    .insert({ sort_order: nextOrder, emoji: '🌿', title: '새 섹션', body: '', visible: true })
+  if (error) return { error: '추가 실패: ' + error.message }
+  revalidatePath('/admin/content')
+  revalidatePath('/')
+  return { ok: true }
+}
+
+// 섹션 내용 수정
+export async function updateSection(
+  id: string,
+  input: SectionEdit
+): Promise<{ error: string } | { ok: true }> {
+  if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
+  if (!input.title.trim()) return { error: '제목을 입력해주세요.' }
+
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('landing_sections')
+    .update({
+      emoji: input.emoji.trim() || '🌿',
+      title: input.title.trim(),
+      body: input.body,
+      visible: input.visible,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) return { error: '저장 실패: ' + error.message }
+  revalidatePath('/admin/content')
+  revalidatePath('/')
+  return { ok: true }
+}
+
+// 섹션 삭제
+export async function deleteSection(id: string): Promise<{ error: string } | { ok: true }> {
+  if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
+  const supabase = createClient()
+  const { error } = await supabase.from('landing_sections').delete().eq('id', id)
+  if (error) return { error: '삭제 실패: ' + error.message }
+  revalidatePath('/admin/content')
+  revalidatePath('/')
+  return { ok: true }
+}
+
+// 섹션 순서 이동(위/아래) — 인접 섹션과 sort_order 교환
+export async function moveSection(
+  id: string,
+  dir: 'up' | 'down'
+): Promise<{ error: string } | { ok: true }> {
+  if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
+  const supabase = createClient()
+  const { data: list } = await supabase
+    .from('landing_sections')
+    .select('id, sort_order')
+    .order('sort_order', { ascending: true })
+  if (!list) return { error: '목록을 불러오지 못했습니다.' }
+
+  const idx = list.findIndex((s) => s.id === id)
+  if (idx === -1) return { error: '섹션을 찾을 수 없습니다.' }
+  const swapIdx = dir === 'up' ? idx - 1 : idx + 1
+  if (swapIdx < 0 || swapIdx >= list.length) return { ok: true } // 이미 끝 — 변화 없음
+
+  const a = list[idx]
+  const b = list[swapIdx]
+  await supabase.from('landing_sections').update({ sort_order: b.sort_order }).eq('id', a.id)
+  await supabase.from('landing_sections').update({ sort_order: a.sort_order }).eq('id', b.id)
+
+  revalidatePath('/admin/content')
+  revalidatePath('/')
+  return { ok: true }
+}

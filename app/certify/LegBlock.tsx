@@ -40,6 +40,18 @@ export const emptyLeg = (init?: Partial<Leg>): Leg => ({
   ...init,
 })
 
+function StepHeader({ n, title, hint }: { n: number; title: string; hint?: string }) {
+  return (
+    <div className="mb-2.5 flex items-center gap-2">
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gm-fill text-[11px] font-bold text-gm-green">
+        {n}
+      </span>
+      <span className="text-sm font-bold text-gm-ink2">{title}</span>
+      {hint && <span className="text-xs font-semibold text-gm-muted2">{hint}</span>}
+    </div>
+  )
+}
+
 export default function LegBlock({
   leg,
   index,
@@ -92,30 +104,29 @@ export default function LegBlock({
   }
 
   const inputCls =
-    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500'
-  const labelCls = 'block text-sm font-medium text-gray-700 mb-1'
+    'w-full rounded-lg border border-gm-line px-3 py-2.5 text-sm focus:border-gm-leaf focus:outline-none focus:ring-1 focus:ring-gm-leaf'
 
   return (
-    <div className="rounded-xl border border-gray-200 p-4">
-      <h2 className="mb-3 text-sm font-bold text-green-700">
+    <div className="rounded-[20px] border border-gm-line bg-white p-5">
+      <span className="inline-block rounded-full bg-gm-green px-3 py-1 text-xs font-bold text-white">
         동선 {index + 1}
         {total > 1 ? ` / ${total}` : ''}
-      </h2>
+      </span>
 
-      <div className="space-y-5">
-        {/* 교통수단 */}
+      <div className="mt-[18px] space-y-5">
+        {/* 1) 교통수단 */}
         <div>
-          <label className={labelCls}>교통수단</label>
+          <StepHeader n={1} title="교통수단" />
           <div className="grid grid-cols-4 gap-2">
             {TRANSPORTS.map((t) => (
               <button
                 type="button"
                 key={t.key}
                 onClick={() => update({ transport: t.key })}
-                className={`rounded-lg border py-3 text-center text-sm ${
+                className={`rounded-xl border py-3 text-center text-xs ${
                   leg.transport === t.key
-                    ? 'border-green-600 bg-green-50 font-semibold text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    ? 'border-[1.5px] border-gm-green bg-gm-sage font-bold text-gm-green'
+                    : 'border-gm-line text-gm-muted'
                 }`}
               >
                 <div className="text-xl">{t.icon}</div>
@@ -125,19 +136,19 @@ export default function LegBlock({
           </div>
         </div>
 
-        {/* 거리 입력 방식 */}
+        {/* 2) 이동 거리 */}
         <div>
-          <label className={labelCls}>이동 거리</label>
+          <StepHeader n={2} title="이동 거리" />
           <div className="mb-3 grid grid-cols-2 gap-2">
             {(['auto', 'manual'] as const).map((m) => (
               <button
                 type="button"
                 key={m}
                 onClick={() => update({ mode: m, calcInfo: '' })}
-                className={`rounded-lg border py-2 text-sm ${
+                className={`rounded-lg border py-2.5 text-sm ${
                   leg.mode === m
-                    ? 'border-green-600 bg-green-50 font-semibold text-green-700'
-                    : 'border-gray-200 text-gray-600'
+                    ? 'border-[1.5px] border-gm-green bg-gm-sage font-bold text-gm-green'
+                    : 'border-gm-line text-gm-muted'
                 }`}
               >
                 {m === 'auto' ? '지도에서 핀 찍기' : '직접 입력'}
@@ -158,11 +169,11 @@ export default function LegBlock({
               />
 
               <div className="mt-2 space-y-1 text-xs">
-                <p className="text-gray-600">
-                  🟢 출발: {leg.startAddress || <span className="text-gray-400">지도에서 핀을 찍어주세요</span>}
+                <p className="text-gm-muted">
+                  🟢 출발: {leg.startAddress || <span className="text-gm-muted2">지도에서 핀을 찍어주세요</span>}
                 </p>
-                <p className="text-gray-600">
-                  🔴 도착: {leg.endAddress || <span className="text-gray-400">지도에서 핀을 찍어주세요</span>}
+                <p className="text-gm-muted">
+                  🔴 도착: {leg.endAddress || <span className="text-gm-muted2">지도에서 핀을 찍어주세요</span>}
                 </p>
               </div>
 
@@ -170,17 +181,17 @@ export default function LegBlock({
                 type="button"
                 onClick={handleCalc}
                 disabled={!bothPins || calcLoading}
-                className="mt-3 w-full rounded-lg border border-green-600 py-2 text-sm font-medium text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                className="mt-3 w-full rounded-lg border-[1.5px] border-[#bcd0a8] py-2.5 text-sm font-bold text-gm-green hover:bg-gm-sage disabled:cursor-not-allowed disabled:border-gm-line disabled:text-gm-muted2"
               >
                 {calcLoading ? '계산 중...' : '📍 거리 자동 계산'}
               </button>
               {!bothPins && (
-                <p className="mt-1 text-center text-xs text-gray-400">출발·도착 핀을 모두 찍으면 계산할 수 있어요.</p>
+                <p className="mt-1 text-center text-xs text-gm-muted2">출발·도착 핀을 모두 찍으면 계산할 수 있어요.</p>
               )}
               {leg.distance && (
-                <p className="mt-2 text-center text-sm font-semibold text-gray-700">이동 거리: {leg.distance} km</p>
+                <p className="mt-2 text-center text-sm font-bold text-gm-ink2">이동 거리: {leg.distance} km</p>
               )}
-              {leg.calcInfo && <p className="mt-1 text-center text-xs text-gray-400">{leg.calcInfo}</p>}
+              {leg.calcInfo && <p className="mt-1 text-center text-xs text-gm-muted2">{leg.calcInfo}</p>}
             </div>
           ) : (
             <div className="space-y-2">
@@ -191,15 +202,18 @@ export default function LegBlock({
           )}
         </div>
 
-        {/* 사진 */}
+        {/* 3) 사진 */}
         <div>
-          <label className={labelCls}>사진 (필수 · 시작/종료 각 2장)</label>
-          <p className="mb-2 text-xs text-gray-400">
+          <StepHeader n={3} title="사진" hint="(시작·종료 각 2장)" />
+          <p className="mb-2.5 ml-7 text-[11.5px] leading-snug text-gm-muted2">
             위치마다 ① 현장 직접 촬영 ② 지도 앱 현재위치 스크린샷 1장씩.
           </p>
           <div className="grid grid-cols-2 gap-2">
             {PHOTO_SLOTS.map((slot) => (
-              <label key={slot.key} className="relative flex h-24 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 text-center text-xs text-gray-500 hover:bg-gray-50">
+              <label
+                key={slot.key}
+                className="relative flex h-[82px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-[1.5px] border-dashed border-[#cfd3c6] text-center text-xs text-gm-muted2 hover:bg-gm-sage"
+              >
                 {leg.previews[slot.key] ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}

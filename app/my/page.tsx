@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
+import MyCertsList, { type CertRow } from './MyCertsList'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,7 @@ export default async function MyCertsPage() {
   const approved = rows.filter((c) => c.status === 'approved')
   const byTransport: Record<string, number> = {}
   for (const c of approved) byTransport[c.transport] = (byTransport[c.transport] ?? 0) + 1
+  const totalKg = approved.reduce((s, c) => s + Number(c.co2_reduced_g), 0) / 1000
 
   // 사진 서명 URL
   const paths: string[] = []
@@ -36,33 +38,56 @@ export default async function MyCertsPage() {
     })
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <Link href="/dashboard" className="text-sm text-gray-400 hover:text-gray-600">← 대시보드</Link>
-          <span className="font-bold text-green-700">📋 내 인증 내용</span>
-        </div>
-      </header>
+  // 클라이언트로 넘길 직렬화 데이터
+  const certRows: CertRow[] = rows.map((c) => ({
+    id: c.id,
+    transport: c.transport,
+    distanceKm: Number(c.distance_km),
+    co2Kg: Number(c.co2_reduced_g) / 1000,
+    status: c.status,
+    processed: !!c.processed_at,
+    rejectReason: c.reject_reason ?? null,
+    startAddress: c.start_address ?? '시작',
+    endAddress: c.end_address ?? '종료',
+    createdAt: c.created_at,
+    processedAt: c.processed_at ?? null,
+    photos: [c.start_photo_1, c.start_photo_2, c.end_photo_1, c.end_photo_2].map((p) =>
+      p ? urlMap.get(p) ?? null : null
+    ),
+  }))
 
-      <main className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-        {/* 교통수단별 비율 차트 (관리자 통계와 동일 형태) */}
-        <div className="rounded-xl bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold text-gray-700">교통수단별 인증 비율</h2>
+  return (
+    <main className="min-h-screen bg-gm-cream2 px-5 py-7">
+      <div className="mx-auto max-w-2xl">
+        <Link href="/dashboard" className="text-[13px] text-gm-muted2 hover:text-gm-muted">
+          ← 대시보드
+        </Link>
+        <h1 className="mt-3.5 text-[22px] font-bold tracking-tight text-gm-ink2">내 인증 내용 📋</h1>
+
+        {/* 상단 요약 */}
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
+          <Summary label="총 인증" value={`${rows.length}`} unit="건" />
+          <Summary label="승인됨" value={`${approved.length}`} unit="건" green />
+          <Summary label="누적 감축" value={totalKg.toFixed(2)} unit="kg" />
+        </div>
+
+        {/* 교통수단별 비율 */}
+        <div className="mt-3.5 rounded-[18px] border border-gm-line bg-white p-[18px]">
+          <p className="mb-3.5 text-sm font-bold text-gm-ink2">교통수단별 인증 비율</p>
           {approved.length === 0 ? (
-            <p className="text-sm text-gray-400">아직 승인된 인증이 없습니다.</p>
+            <p className="text-sm text-gm-muted2">아직 승인된 인증이 없습니다.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2.5">
               {(['walk', 'bike', 'bus', 'subway'] as TransportKey[]).map((t) => {
                 const n = byTransport[t] ?? 0
                 const pct = approved.length ? Math.round((n / approved.length) * 100) : 0
                 return (
-                  <div key={t} className="flex items-center gap-3 text-sm">
-                    <span className="w-12 text-gray-600">{TRANSPORT_LABEL[t]}</span>
-                    <div className="h-3 flex-1 overflow-hidden rounded-full bg-gray-100">
-                      <div className="h-full rounded-full bg-green-500" style={{ width: `${pct}%` }} />
+                  <div key={t} className="flex items-center gap-2.5 text-xs">
+                    <span className="w-9 text-gm-muted">{TRANSPORT_LABEL[t]}</span>
+                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-gm-sage">
+                      <div className="h-full rounded-full bg-gm-leaf" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="w-16 text-right text-gray-500">{n}건 ({pct}%)</span>
+                    <span className="w-14 text-right text-gm-muted2">{n}건 ({pct}%)</span>
                   </div>
                 )
               })}
@@ -70,67 +95,21 @@ export default async function MyCertsPage() {
           )}
         </div>
 
-        {/* 인증 내역 카드 */}
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-gray-700">인증 내역 ({rows.length}건)</h2>
-          {rows.length === 0 && <p className="text-sm text-gray-400">아직 인증이 없습니다.</p>}
-
-          {rows.map((c) => {
-            const photos = [c.start_photo_1, c.start_photo_2, c.end_photo_1, c.end_photo_2]
-            return (
-              <div key={c.id} className="rounded-xl bg-white p-4 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-medium text-gray-800">
-                    {TRANSPORT_LABEL[c.transport as TransportKey]} · {Number(c.distance_km)}km ·{' '}
-                    {(Number(c.co2_reduced_g) / 1000).toFixed(2)}kg CO₂
-                  </span>
-                  <StatusBadge status={c.status} processed={!!c.processed_at} />
-                </div>
-
-                <p className="mt-1 text-xs text-gray-500">
-                  {c.start_address || '시작'} → {c.end_address || '종료'}
-                </p>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {photos.map((p, i) =>
-                    p && urlMap.get(p) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <a key={i} href={urlMap.get(p)} target="_blank" rel="noreferrer">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={urlMap.get(p)} alt={`photo${i}`} className="h-20 w-20 rounded-lg object-cover" />
-                      </a>
-                    ) : (
-                      <div key={i} className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">없음</div>
-                    )
-                  )}
-                </div>
-
-                <p className="mt-2 text-xs text-gray-400">
-                  업로드: {new Date(c.created_at).toLocaleString('ko-KR')}
-                  {c.processed_at && ` · 처리: ${new Date(c.processed_at).toLocaleString('ko-KR')}`}
-                </p>
-                {c.status === 'rejected' && c.reject_reason && (
-                  <p className="mt-1 text-xs text-red-500">반려 사유: {c.reject_reason}</p>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </main>
-    </div>
+        {/* 상태 필터 + 인증 내역 */}
+        <MyCertsList rows={certRows} />
+      </div>
+    </main>
   )
 }
 
-// 승인/반려/대기 — 자동승인됐지만 운영진 확인 전이면 '대기'
-function StatusBadge({ status, processed }: { status: string; processed: boolean }) {
-  let label = '대기'
-  let cls = 'bg-gray-100 text-gray-500'
-  if (status === 'rejected') {
-    label = '반려'
-    cls = 'bg-red-100 text-red-600'
-  } else if (status === 'approved' && processed) {
-    label = '승인'
-    cls = 'bg-green-100 text-green-700'
-  }
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{label}</span>
+function Summary({ label, value, unit, green }: { label: string; value: string; unit: string; green?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-gm-line bg-white px-2 py-3.5 text-center">
+      <p className="text-[11px] text-gm-muted2">{label}</p>
+      <p className={`mt-1 text-lg font-bold ${green ? 'text-[#15803d]' : 'text-gm-ink2'}`}>
+        {value}
+        <span className="text-xs">{unit}</span>
+      </p>
+    </div>
+  )
 }
