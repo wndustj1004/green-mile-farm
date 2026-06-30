@@ -82,8 +82,8 @@ export async function calcDistanceKm(
   return { km: Math.round(straight * 100) / 100, method: '직선 거리(근사)' }
 }
 
-// 지도 핀 좌표로 거리 계산 (텍스트 지오코딩을 거치지 않음 → 같은 좌표면 항상 같은 결과).
-// 도로경로 계산 로직(routeKm)은 그대로 재사용.
+// 지도 핀(건물 단위로 정규화된) 좌표로 거리 계산. 도로경로 로직(routeKm) 그대로 재사용.
+// 좌표 정규화는 클라이언트(MapPicker)에서 주소 기반으로 수행하므로 여기선 받은 좌표를 그대로 사용.
 export async function calcDistanceByCoords(
   start: { lat: number; lng: number },
   end: { lat: number; lng: number }
