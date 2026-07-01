@@ -89,6 +89,7 @@ export type LandingSection = {
   title: string
   body: string
   visible: boolean
+  images: string[]
 }
 
 export type SectionEdit = {
@@ -139,6 +140,20 @@ export async function updateSection(
     .eq('id', id)
 
   if (error) return { error: '저장 실패: ' + error.message }
+  revalidatePath('/admin/content')
+  revalidatePath('/')
+  return { ok: true }
+}
+
+// 섹션 이미지 목록 저장 (업로드는 클라이언트에서 Storage로, 여기선 경로 목록만 갱신)
+export async function updateSectionImages(
+  id: string,
+  images: string[]
+): Promise<{ error: string } | { ok: true }> {
+  if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
+  const supabase = createClient()
+  const { error } = await supabase.from('landing_sections').update({ images }).eq('id', id)
+  if (error) return { error: '이미지 저장 실패: ' + error.message }
   revalidatePath('/admin/content')
   revalidatePath('/')
   return { ok: true }
