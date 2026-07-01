@@ -21,7 +21,7 @@ export default async function Home() {
 
   const { data: settings } = await supabase
     .from('settings')
-    .select('target_co2_kg, car_emission, walk_emission, bike_emission, bus_emission, subway_emission')
+    .select('target_co2_kg, challenge_end, car_emission, walk_emission, bike_emission, bus_emission, subway_emission')
     .eq('id', 1)
     .single()
   const targetKg = Number(settings?.target_co2_kg ?? 5)
@@ -32,6 +32,24 @@ export default async function Home() {
     bus: Number(settings?.bus_emission ?? 27.7),
     subway: Number(settings?.subway_emission ?? 1.53),
   }
+
+  // 챌린지 마감까지 D-day
+  let dday: number | null = null
+  if (settings?.challenge_end) {
+    const end = new Date(settings.challenge_end as string)
+    const today = new Date()
+    end.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0)
+    const diff = Math.round((end.getTime() - today.getTime()) / 86400000)
+    if (diff >= 0) dday = diff
+  }
+
+  // 공개 집계(실시간 임팩트)
+  const { data: statsRaw } = await supabase.rpc('challenge_stats')
+  const stats = (statsRaw ?? {}) as { participants?: number; total_reduced_kg?: number; harvest_count?: number }
+  const participants = Number(stats.participants ?? 0)
+  const totalKg = Number(stats.total_reduced_kg ?? 0)
+  const harvest = Number(stats.harvest_count ?? 0)
 
   return (
     <main className="flex min-h-screen flex-col bg-gm-cream">
@@ -53,7 +71,7 @@ export default async function Home() {
       </header>
 
       {/* Hero (청록) */}
-      <section className="bg-[#9ccabb] px-6 pt-11 pb-8 text-center">
+      <section className="bg-[#9ccabb] px-6 pb-8 pt-11 text-center">
         <span className="inline-block rounded-full bg-[#4f8d61] px-4 py-1.5 text-xs font-bold tracking-wider text-white">
           GREEN MILE
         </span>
@@ -123,6 +141,34 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* 실시간 임팩트 */}
+      <section className="bg-gm-cream px-6 py-12 sm:py-14">
+        <div className="mx-auto max-w-2xl">
+          <div className="mb-6 text-center">
+            <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">OUR IMPACT</span>
+            <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">함께 만드는 변화</h2>
+            {dday !== null && (
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gm-sage px-3.5 py-1.5">
+                <span className="h-2 w-2 rounded-full bg-gm-leaf" />
+                <span className="text-xs font-bold text-gm-green">챌린지 진행 중 · D-{dday}</span>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <ImpactCard emoji="👥" value={`${participants}`} unit="명" label="함께한 참여자" />
+            <ImpactCard emoji="🌍" value={totalKg.toFixed(1)} unit="kg" label="함께 줄인 CO₂" />
+            <ImpactCard emoji="🍅" value={`${harvest}`} unit="명" label="작물 수확 달성" />
+            <ImpactCard emoji="🎯" value={`${targetKg}`} unit="kg" label="1인 목표 감축량" />
+          </div>
+          <Link
+            href={user ? '/dashboard' : '/signup'}
+            className="mt-6 block rounded-full bg-[#161616] py-3.5 text-center text-[15px] font-bold text-white hover:opacity-90"
+          >
+            {user ? '내 농장 보기' : '챌린지 참여하기'}
+          </Link>
+        </div>
+      </section>
+
       {/* 작물 보상 안내 */}
       <section className="bg-gm-cream px-5 py-8">
         <div className="mx-auto max-w-2xl rounded-3xl bg-[#4a5cc7] px-7 py-9">
@@ -185,6 +231,21 @@ function StepRow({ n, title, accent, children }: { n: number; title: string; acc
         </p>
         <p className="mt-1.5 text-[13px] leading-relaxed text-gm-muted">{children}</p>
       </div>
+    </div>
+  )
+}
+
+function ImpactCard({ emoji, value, unit, label }: { emoji: string; value: string; unit: string; label: string }) {
+  return (
+    <div className="rounded-2xl border border-gm-line bg-white px-5 py-5">
+      <div className="text-2xl" aria-hidden>
+        {emoji}
+      </div>
+      <div className="mt-2 text-[28px] font-extrabold tracking-tight text-gm-ink">
+        {value}
+        <span className="text-base font-bold">{unit}</span>
+      </div>
+      <p className="mt-1 text-xs text-gm-muted">{label}</p>
     </div>
   )
 }
