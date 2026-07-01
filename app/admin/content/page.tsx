@@ -8,10 +8,10 @@ export default async function AdminContentPage() {
   const supabase = createClient()
   const { data } = await supabase
     .from('landing_sections')
-    .select('id, sort_order, emoji, title, body, visible')
+    .select('id, sort_order, emoji, title, body, visible, images')
     .order('sort_order', { ascending: true })
 
-  const sections = (data ?? []) as LandingSection[]
+  const sections = ((data ?? []).map((s) => ({ ...s, images: s.images ?? [] }))) as LandingSection[]
 
   return (
     <div className="space-y-5">

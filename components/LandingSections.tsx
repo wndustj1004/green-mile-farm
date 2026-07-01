@@ -1,4 +1,5 @@
 import type { LandingSection } from '@/app/admin/actions'
+import CropCarousel from './CropCarousel'
 
 export type Emissions = {
   car: number
@@ -23,11 +24,12 @@ export default function LandingSections({
   return (
     <>
       {sections.map((s, i) => {
-        const t = i < 4 ? i : 0
-        if (t === 0) return <StorySection key={s.id} s={s} />
-        if (t === 1) return <ProjectSection key={s.id} s={s} />
-        if (t === 2) return <PolicySection key={s.id} s={s} />
-        return <DataSection key={s.id} s={s} emissions={emissions} />
+        if (i === 0) return <StorySection key={s.id} s={s} />
+        if (i === 1) return <ProjectSection key={s.id} s={s} />
+        if (i === 2) return <PolicySection key={s.id} s={s} />
+        if (i === 3) return <DataSection key={s.id} s={s} emissions={emissions} />
+        if (i === 4) return <CarouselSection key={s.id} s={s} />
+        return <StorySection key={s.id} s={s} />
       })}
     </>
   )
@@ -35,6 +37,19 @@ export default function LandingSections({
 
 function Label({ children }: { children: string }) {
   return <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{children}</span>
+}
+
+// 관리자가 섹션에 첨부한 이미지 표시
+function SectionImages({ images }: { images: string[] }) {
+  if (!images || images.length === 0) return null
+  return (
+    <div className={`mt-5 grid gap-2.5 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      {images.map((url, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={i} src={url} alt="" className="h-44 w-full rounded-2xl border border-gm-line object-cover" />
+      ))}
+    </div>
+  )
 }
 
 function PlantSvg() {
@@ -60,6 +75,7 @@ function StorySection({ s }: { s: LandingSection }) {
           <PlantSvg />
         </div>
         <p className="whitespace-pre-line text-[15px] leading-[1.8] text-gm-body">{s.body}</p>
+        <SectionImages images={s.images} />
       </div>
     </section>
   )
@@ -87,6 +103,7 @@ function ProjectSection({ s }: { s: LandingSection }) {
             </div>
           ))}
         </div>
+        <SectionImages images={s.images} />
         <p className="mt-3 text-[11px] text-[#9bb695]">※ 핵심 정보는 관리자가 채워 넣습니다</p>
       </div>
     </section>
@@ -115,7 +132,24 @@ function PolicySection({ s }: { s: LandingSection }) {
           <div className="rounded-xl bg-white px-4 py-3 text-[13px] leading-relaxed text-gm-body">🚍 버스·지하철 노선 확충 및 친환경 차량 도입</div>
           <div className="rounded-xl bg-white px-4 py-3 text-[13px] leading-relaxed text-gm-body">🚲 자전거 도로·공유 자전거 인프라 확대</div>
         </div>
+        <SectionImages images={s.images} />
         <p className="mt-3 px-0.5 text-[11px] text-gm-muted2">※ 정확한 수치·정책은 관리자가 채워 넣습니다</p>
+      </div>
+    </section>
+  )
+}
+
+// 5) 사진 캐러셀형 — G.P.S 작물 키우기 (관리자 업로드 사진)
+function CarouselSection({ s }: { s: LandingSection }) {
+  return (
+    <section className="scroll-mt-20 bg-gm-cream px-7 py-12 sm:py-14">
+      <div className="mx-auto max-w-2xl">
+        <Label>OUR GARDEN</Label>
+        <h2 className="mt-2.5 text-2xl font-bold tracking-tight text-gm-ink sm:text-3xl">{s.title}</h2>
+        {s.body && (
+          <p className="mt-3.5 whitespace-pre-line text-[15px] leading-[1.8] text-gm-body">{s.body}</p>
+        )}
+        <CropCarousel images={s.images} />
       </div>
     </section>
   )
@@ -164,6 +198,7 @@ function DataSection({ s, emissions }: { s: LandingSection; emissions: Emissions
         <p className="mt-[18px] text-[15px] leading-[1.8] text-gm-body">
           그래서 <b className="text-gm-green">이동수단을 바꾸는 것</b>만으로도 의미 있는 감축이 가능합니다.
         </p>
+        <SectionImages images={s.images} />
       </div>
     </section>
   )

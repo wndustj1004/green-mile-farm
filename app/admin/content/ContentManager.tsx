@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   createSection,
   updateSection,
+  updateSectionImages,
   deleteSection,
   moveSection,
   type LandingSection,
@@ -69,11 +71,42 @@ function SectionRow({
   const [title, setTitle] = useState(section.title)
   const [body, setBody] = useState(section.body)
   const [visible, setVisible] = useState(section.visible)
+  const [images, setImages] = useState<string[]>(section.images ?? [])
+  const [uploading, setUploading] = useState(false)
   const [msg, setMsg] = useState('')
   const [saving, setSaving] = useState(false)
+  const supabase = createClient()
 
   const input =
     'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none'
+
+  async function uploadImage(file: File) {
+    setMsg('')
+    if (!file.type.startsWith('image/')) return setMsg('❌ 이미지 파일만 첨부할 수 있어요.')
+    if (file.size > 8 * 1024 * 1024) return setMsg('❌ 사진 용량은 8MB 이하여야 해요.')
+    setUploading(true)
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `${section.id}/${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from('landing-images').upload(path, file)
+    if (error) {
+      setUploading(false)
+      return setMsg('❌ 업로드 실패: ' + error.message)
+    }
+    const { data } = supabase.storage.from('landing-images').getPublicUrl(path)
+    const next = [...images, data.publicUrl]
+    const res = await updateSectionImages(section.id, next)
+    setUploading(false)
+    if ('error' in res) return setMsg('❌ ' + res.error)
+    setImages(next)
+    setMsg('✅ 이미지 추가됨')
+  }
+
+  async function removeImage(url: string) {
+    const next = images.filter((u) => u !== url)
+    const res = await updateSectionImages(section.id, next)
+    if ('error' in res) return alert(res.error)
+    setImages(next)
+  }
 
   async function save() {
     setMsg('')
@@ -137,6 +170,41 @@ function SectionRow({
         placeholder="본문을 입력하세요. 줄바꿈은 그대로 화면에 표시됩니다."
         onChange={(e) => setBody(e.target.value)}
       />
+
+      {/* 이미지 첨부 */}
+      <div className="mt-3">
+        <p className="mb-1.5 text-xs font-medium text-gray-500">이미지 (여러 장 가능 · 8MB 이하)</p>
+        <div className="flex flex-wrap gap-2">
+          {images.map((url) => (
+            <div key={url} className="relative h-20 w-20 overflow-hidden rounded-lg border border-gray-200">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="첨부 이미지" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeImage(url)}
+                className="absolute right-0 top-0 bg-black/50 px-1.5 text-xs text-white hover:bg-black/70"
+                aria-label="이미지 삭제"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 text-center text-xs text-gray-400 hover:bg-gray-50">
+            {uploading ? '올리는 중…' : '＋ 이미지'}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) uploadImage(f)
+                e.target.value = ''
+              }}
+            />
+          </label>
+        </div>
+      </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
