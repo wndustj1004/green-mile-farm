@@ -165,14 +165,14 @@ function DataSection({ s, emissions }: { s: LandingSection; emissions: Emissions
     { label: '🚶 걷기·자전거', g: Math.max(emissions.walk, emissions.bike), bad: false },
   ]
   return (
-    <section className="scroll-mt-20 bg-white px-7 py-12 sm:py-14">
-      <div className="mx-auto max-w-2xl">
+    <section className="scroll-mt-20 bg-gm-cream px-5 py-8">
+      <div className="mx-auto max-w-2xl rounded-3xl bg-[#26313a] px-7 py-9">
         <Label>DATA</Label>
-        <h2 className="mt-2.5 text-2xl font-bold tracking-tight text-gm-ink sm:text-3xl">{s.title}</h2>
-        <p className="mt-3.5 text-[15px] leading-[1.8] text-gm-body">
-          같은 거리를 이동해도 <b className="text-gm-green">어떤 수단</b>을 쓰느냐에 따라 배출량이 크게 달라집니다.
+        <h2 className="mt-2.5 text-2xl font-bold tracking-tight text-white sm:text-3xl">{s.title}</h2>
+        <p className="mt-3.5 text-[15px] leading-[1.8] text-[#c3cbd2]">
+          같은 거리를 이동해도 <b className="text-[#9fdcae]">어떤 수단</b>을 쓰느냐에 따라 배출량이 크게 달라집니다.
         </p>
-        <div className="mt-5 rounded-2xl bg-[#f4f7ef] px-[18px] py-5">
+        <div className="mt-5 rounded-2xl bg-white px-[18px] py-5">
           <p className="mb-4 text-[13px] font-bold text-[#3a4036]">1km 이동당 CO₂ 배출량</p>
           <div className="flex flex-col gap-3.5">
             {bars.map((b) => {
@@ -195,8 +195,8 @@ function DataSection({ s, emissions }: { s: LandingSection; emissions: Emissions
           </div>
           <p className="mt-3.5 text-[11px] text-gm-muted2">※ 그린마일 팜 배출계수 기준(임시값) · 관리자 설정에 연동</p>
         </div>
-        <p className="mt-[18px] text-[15px] leading-[1.8] text-gm-body">
-          그래서 <b className="text-gm-green">이동수단을 바꾸는 것</b>만으로도 의미 있는 감축이 가능합니다.
+        <p className="mt-[18px] text-[15px] leading-[1.8] text-[#c3cbd2]">
+          그래서 <b className="text-[#9fdcae]">이동수단을 바꾸는 것</b>만으로도 의미 있는 감축이 가능합니다.
         </p>
         <SectionImages images={s.images} />
       </div>
