@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { LandingSection } from '@/app/admin/actions'
+import { resolveSiteTexts } from '@/lib/siteText'
 import LandingSections, { type Emissions } from '@/components/LandingSections'
 import CertifyTutorial from '@/components/CertifyTutorial'
 
@@ -19,6 +20,9 @@ export default async function Home() {
     .order('sort_order', { ascending: true })
   const sections = ((data ?? []).map((s) => ({ ...s, images: s.images ?? [] }))) as LandingSection[]
 
+  const { data: textRows } = await supabase.from('site_texts').select('key, value')
+  const T = resolveSiteTexts(textRows)
+
   const { data: settings } = await supabase
     .from('settings')
     .select('target_co2_kg, challenge_end, car_emission, walk_emission, bike_emission, bus_emission, subway_emission')
@@ -33,7 +37,6 @@ export default async function Home() {
     subway: Number(settings?.subway_emission ?? 1.53),
   }
 
-  // 챌린지 마감까지 D-day
   let dday: number | null = null
   if (settings?.challenge_end) {
     const end = new Date(settings.challenge_end as string)
@@ -44,7 +47,6 @@ export default async function Home() {
     if (diff >= 0) dday = diff
   }
 
-  // 공개 집계(실시간 임팩트)
   const { data: statsRaw } = await supabase.rpc('challenge_stats')
   const stats = (statsRaw ?? {}) as { participants?: number; total_reduced_kg?: number; harvest_count?: number }
   const participants = Number(stats.participants ?? 0)
@@ -73,12 +75,10 @@ export default async function Home() {
       {/* Hero (청록) */}
       <section className="bg-[#9ccabb] px-6 pb-8 pt-11 text-center">
         <span className="inline-block rounded-full bg-[#4f8d61] px-4 py-1.5 text-xs font-bold tracking-wider text-white">
-          GREEN MILE
+          {T['hero.badge']}
         </span>
-        <h1 className="mt-4 text-[28px] font-extrabold leading-[1.35] tracking-tight text-[#1c2f28] sm:text-[32px]">
-          걸을수록 자라는
-          <br />
-          나만의 친환경 텃밭
+        <h1 className="mt-4 whitespace-pre-line text-[28px] font-extrabold leading-[1.35] tracking-tight text-[#1c2f28] sm:text-[32px]">
+          {T['hero.title']}
         </h1>
         <div className="mt-4">
           <TomatoPot />
@@ -87,10 +87,8 @@ export default async function Home() {
 
       {/* 미션 (초록) */}
       <section className="bg-[#5fae70] px-7 py-10 text-center">
-        <p className="mx-auto max-w-md text-[15px] leading-[1.8] text-white">
-          걷기·자전거·대중교통으로 줄인 CO₂만큼 방울토마토가 자라요.
-          <br />
-          다 키우면 <b>G.P.S가 직접 키운 진짜 작물</b>을 받아요! 🍅
+        <p className="mx-auto max-w-md whitespace-pre-line text-[15px] leading-[1.8] text-white">
+          {T['hero.mission']}
         </p>
         {!user && (
           <div className="mx-auto mt-6 flex max-w-xs flex-col gap-2.5">
@@ -108,24 +106,14 @@ export default async function Home() {
       <section className="bg-gm-cream px-6 py-12 sm:py-14">
         <div className="mx-auto max-w-2xl">
           <div className="mb-7 text-center">
-            <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">HOW IT WORKS</span>
-            <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">이렇게 참여해요</h2>
+            <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['steps.label']}</span>
+            <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['steps.title']}</h2>
           </div>
           <div className="flex flex-col gap-3">
-            <StepRow n={1} title="회원가입" accent>
-              진짜 작물을 배송받으실 <b className="text-gm-green">주소</b>를 입력해주세요. 목표({targetKg}kg)에 도달하면 수확 시기에 맞춰{' '}
-              <b className="text-gm-green">배송 안내 문자</b>를 보내드려요. 입력하신 주소·연락처는 챌린지 보상 배송 목적으로만
-              사용되며, 챌린지 종료 후 3개월이 지나면 안전하게 파기됩니다.
-            </StepRow>
-            <StepRow n={2} title="이동 인증">
-              걷기·자전거·대중교통으로 이동한 구간을 지도와 사진으로 인증해요. (아래 가이드 참고)
-            </StepRow>
-            <StepRow n={3} title="작물 성장">
-              줄인 CO₂만큼 내 방울토마토가 5단계로 자라요.
-            </StepRow>
-            <StepRow n={4} title="실물 보상">
-              목표에 도달하면 G.P.S가 키운 진짜 작물을 받아요.
-            </StepRow>
+            <StepRow n={1} title={T['steps.s1_title']} accent>{T['steps.s1_desc']}</StepRow>
+            <StepRow n={2} title={T['steps.s2_title']}>{T['steps.s2_desc']}</StepRow>
+            <StepRow n={3} title={T['steps.s3_title']}>{T['steps.s3_desc']}</StepRow>
+            <StepRow n={4} title={T['steps.s4_title']}>{T['steps.s4_desc']}</StepRow>
           </div>
         </div>
       </section>
@@ -134,10 +122,10 @@ export default async function Home() {
       <section className="bg-gm-sage px-6 py-12 sm:py-14">
         <div className="mx-auto max-w-2xl">
           <div className="mb-6 text-center">
-            <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">GUIDE</span>
-            <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">이동 인증, 이렇게 해요</h2>
+            <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['guide.label']}</span>
+            <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['guide.title']}</h2>
           </div>
-          <CertifyTutorial />
+          <CertifyTutorial texts={T} />
         </div>
       </section>
 
@@ -145,8 +133,8 @@ export default async function Home() {
       <section className="bg-gm-cream px-6 py-12 sm:py-14">
         <div className="mx-auto max-w-2xl">
           <div className="mb-6 text-center">
-            <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">OUR IMPACT</span>
-            <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">함께 만드는 변화</h2>
+            <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['impact.label']}</span>
+            <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['impact.title']}</h2>
             {dday !== null && (
               <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gm-sage px-3.5 py-1.5">
                 <span className="h-2 w-2 rounded-full bg-gm-leaf" />
@@ -155,16 +143,16 @@ export default async function Home() {
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <ImpactCard emoji="👥" value={`${participants}`} unit="명" label="함께한 참여자" />
-            <ImpactCard emoji="🌍" value={totalKg.toFixed(1)} unit="kg" label="함께 줄인 CO₂" />
-            <ImpactCard emoji="🍅" value={`${harvest}`} unit="명" label="작물 수확 달성" />
-            <ImpactCard emoji="🎯" value={`${targetKg}`} unit="kg" label="1인 목표 감축량" />
+            <ImpactCard emoji="👥" value={`${participants}`} unit="명" label={T['impact.l_participants']} />
+            <ImpactCard emoji="🌍" value={totalKg.toFixed(1)} unit="kg" label={T['impact.l_co2']} />
+            <ImpactCard emoji="🍅" value={`${harvest}`} unit="명" label={T['impact.l_harvest']} />
+            <ImpactCard emoji="🎯" value={`${targetKg}`} unit="kg" label={T['impact.l_target']} />
           </div>
           <Link
             href={user ? '/dashboard' : '/signup'}
             className="mt-6 block rounded-full bg-[#161616] py-3.5 text-center text-[15px] font-bold text-white hover:opacity-90"
           >
-            {user ? '내 농장 보기' : '챌린지 참여하기'}
+            {user ? '내 농장 보기' : T['impact.cta']}
           </Link>
         </div>
       </section>
@@ -172,47 +160,43 @@ export default async function Home() {
       {/* 작물 보상 안내 */}
       <section className="bg-gm-cream px-5 py-8">
         <div className="mx-auto max-w-2xl rounded-3xl bg-[#4a5cc7] px-7 py-9">
-          <span className="text-[11px] font-bold tracking-[2px] text-[#c9d1f5]">REWARD</span>
-          <h2 className="mt-2.5 text-[23px] font-bold leading-snug tracking-tight text-white">
-            목표 {targetKg}kg 달성 시,
-            <br />
-            진짜 작물을 받아요!
+          <span className="text-[11px] font-bold tracking-[2px] text-[#c9d1f5]">{T['reward.label']}</span>
+          <h2 className="mt-2.5 whitespace-pre-line text-[23px] font-bold leading-snug tracking-tight text-white">
+            {T['reward.title']}
           </h2>
           <ul className="mt-4 flex flex-col gap-2 text-sm leading-relaxed text-[#e5e9fb]">
-            <li>🌱 커피박(커피 찌꺼기) 퇴비로 기른 방울토마토와 스위트 바질</li>
-            <li>🐝 비닐 대신 여러 번 재사용 가능한 밀랍랩에 포장해 배송</li>
+            <li>{T['reward.bullet1']}</li>
+            <li>{T['reward.bullet2']}</li>
           </ul>
           <div className="mt-6 grid grid-cols-4 gap-2">
-            <RewardItem label="방울토마토"><TomatoSvg /></RewardItem>
-            <RewardItem label="스위트 바질"><BasilSvg /></RewardItem>
-            <RewardItem label="밀랍랩"><BeeswaxSvg /></RewardItem>
-            <RewardItem label="커피박 퇴비"><CoffeeSvg /></RewardItem>
+            <RewardItem label={T['reward.item1']}><TomatoSvg /></RewardItem>
+            <RewardItem label={T['reward.item2']}><BasilSvg /></RewardItem>
+            <RewardItem label={T['reward.item3']}><BeeswaxSvg /></RewardItem>
+            <RewardItem label={T['reward.item4']}><CoffeeSvg /></RewardItem>
           </div>
         </div>
       </section>
 
       {/* 소개 섹션 (관리자 편집 + 이미지 첨부 + 배출계수 연동 + 작물 사진 캐러셀) */}
-      <LandingSections sections={sections} emissions={emissions} />
+      <LandingSections sections={sections} emissions={emissions} texts={T} />
 
       {/* CTA */}
       <section className="bg-gm-cream px-6 py-9">
         <div className="mx-auto max-w-2xl rounded-3xl bg-gm-green px-6 py-9 text-center">
-          <p className="text-[19px] font-bold leading-[1.5] tracking-tight text-white">
-            오늘부터,
-            <br />
-            친환경 한 걸음을 시작해요
+          <p className="whitespace-pre-line text-[19px] font-bold leading-[1.5] tracking-tight text-white">
+            {T['cta.title']}
           </p>
           <Link
             href={user ? '/dashboard' : '/signup'}
             className="mt-5 inline-block rounded-full bg-gm-cream px-8 py-3 text-sm font-bold text-gm-green hover:opacity-90"
           >
-            {user ? '내 농장 보기' : '회원가입하기'}
+            {user ? '내 농장 보기' : T['cta.button']}
           </Link>
         </div>
       </section>
 
       <footer className="border-t border-gm-line bg-gm-cream py-6 text-center text-xs text-gm-muted2">
-        🌿 그린마일 팜 · G.P.S
+        {T['footer.text']}
       </footer>
     </main>
   )
@@ -229,7 +213,7 @@ function StepRow({ n, title, accent, children }: { n: number; title: string; acc
           {title}
           {accent && <span className="ml-1.5 text-[11px] font-semibold text-gm-leaf">배송지 입력</span>}
         </p>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-gm-muted">{children}</p>
+        <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-gm-muted">{children}</p>
       </div>
     </div>
   )

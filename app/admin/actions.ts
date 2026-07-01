@@ -145,6 +145,20 @@ export async function updateSection(
   return { ok: true }
 }
 
+// 메인페이지 고정 텍스트 저장 (key-value upsert)
+export async function updateSiteTexts(
+  entries: { key: string; value: string }[]
+): Promise<{ error: string } | { ok: true }> {
+  if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
+  const supabase = createClient()
+  const rows = entries.map((e) => ({ key: e.key, value: e.value, updated_at: new Date().toISOString() }))
+  const { error } = await supabase.from('site_texts').upsert(rows, { onConflict: 'key' })
+  if (error) return { error: '저장 실패: ' + error.message }
+  revalidatePath('/admin/content')
+  revalidatePath('/')
+  return { ok: true }
+}
+
 // 섹션 이미지 목록 저장 (업로드는 클라이언트에서 Storage로, 여기선 경로 목록만 갱신)
 export async function updateSectionImages(
   id: string,

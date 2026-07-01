@@ -4,7 +4,13 @@ import { useState } from 'react'
 
 // 이동 인증 방법 좌우 슬라이더 튜토리얼
 // examples[0] = 지도 스크린샷 예시, examples[1] = 실제 공간 사진 예시 (관리자 업로드 시 표시)
-export default function CertifyTutorial({ examples = [] }: { examples?: string[] }) {
+export default function CertifyTutorial({
+  texts,
+  examples = [],
+}: {
+  texts: Record<string, string>
+  examples?: string[]
+}) {
   const [i, setI] = useState(0)
 
   const mapEx = examples[0]
@@ -13,20 +19,20 @@ export default function CertifyTutorial({ examples = [] }: { examples?: string[]
   const cards = [
     {
       n: 1,
-      title: '교통수단 선택',
-      desc: '이번에 이동한 수단(걷기·자전거·버스·지하철)을 골라요.',
+      title: texts['guide.t1_title'],
+      desc: texts['guide.t1_desc'],
       body: <div className="mt-3 flex justify-center gap-2 text-3xl">🚶 🚲 🚌 🚇</div>,
     },
     {
       n: 2,
-      title: '지도에서 출발·도착 핀 찍기',
-      desc: '지도에 출발·도착 위치를 찍으면 이동 거리가 자동으로 계산돼요.',
+      title: texts['guide.t2_title'],
+      desc: texts['guide.t2_desc'],
       body: <ExampleFrame url={mapEx} label="지도 스크린샷 예시" />,
     },
     {
       n: 3,
-      title: '사진 4장 올리기',
-      desc: '출발·도착 각각 ① 실제 공간 사진 ② 지도 앱 현재위치 스크린샷을 올려요.',
+      title: texts['guide.t3_title'],
+      desc: texts['guide.t3_desc'],
       body: (
         <div className="mt-3 grid grid-cols-2 gap-2">
           <ExampleFrame url={placeEx} label="① 실제 공간 사진" small />
@@ -36,8 +42,8 @@ export default function CertifyTutorial({ examples = [] }: { examples?: string[]
     },
     {
       n: 4,
-      title: '등록 완료!',
-      desc: '줄인 CO₂만큼 내 작물이 쑥쑥 자라요.',
+      title: texts['guide.t4_title'],
+      desc: texts['guide.t4_desc'],
       body: <div className="mt-3 text-center text-5xl">🌱</div>,
     },
   ]
