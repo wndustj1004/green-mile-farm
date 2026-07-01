@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { getGrowth, STAGE_START_RATIO } from '@/lib/growth'
 import { TRANSPORTS, TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
 import StageSlider from './StageSlider'
+import WeeklyRanking, { type RankItem } from '@/components/WeeklyRanking'
+import AppGuide from '@/components/AppGuide'
+import NameEditor from './NameEditor'
 import { logoutAction } from './actions'
 
 export const dynamic = 'force-dynamic' // 항상 최신 데이터로 렌더
@@ -50,7 +53,9 @@ export default async function DashboardPage() {
   const count = certs?.length ?? 0
   const totalDistance = (certs ?? []).reduce((s, c) => s + Number(c.distance_km), 0)
   const totalReducedG = (certs ?? []).reduce((s, c) => s + Number(c.co2_reduced_g), 0)
-  const totalKg = totalReducedG / 1000
+  // 주간 랭킹 보너스(상위 3명 +50%, 완료된 주만) 포함 실효 감축량
+  const { data: effRaw } = await supabase.rpc('effective_reduction_g', { uid: user.id })
+  const totalKg = effRaw != null ? Number(effRaw) / 1000 : totalReducedG / 1000
 
   const growth = getGrowth(totalKg, targetKg)
 
@@ -70,6 +75,12 @@ export default async function DashboardPage() {
     .limit(3)
   const recentRows = recent ?? []
 
+  // 5) 이번 주 랭킹 (상위 6명, 수확 도달자 제외, 상위 3명 +50%)
+  const { data: rankRaw } = await supabase.rpc('weekly_ranking')
+  const ranking = (rankRaw ?? []) as RankItem[]
+  const kstNow = new Date(Date.now() + 9 * 3600 * 1000)
+  const weekLabel = `${kstNow.getUTCMonth() + 1}월 ${Math.ceil(kstNow.getUTCDate() / 7)}주차`
+
   return (
     <main className="min-h-screen bg-gm-cream2 px-5 py-7">
       <div className="mx-auto max-w-md">
@@ -80,6 +91,9 @@ export default async function DashboardPage() {
             <p className="mt-1 text-xl font-bold tracking-tight text-gm-ink2">
               {profile?.name ?? '회원'}님의 텃밭
             </p>
+            <div className="mt-1">
+              <NameEditor currentName={profile?.name ?? ''} />
+            </div>
           </div>
           <div className="flex items-center gap-3 pt-1">
             {profile?.is_admin && (
@@ -195,6 +209,12 @@ export default async function DashboardPage() {
         >
           📋 인증 내용 보기
         </Link>
+
+        {/* 이번 주 랭킹 (상위 6명) — Ranking.html 디자인 */}
+        <WeeklyRanking items={ranking} weekLabel={weekLabel} />
+
+        {/* 앱처럼 사용하기 (홈 화면에 추가 가이드) */}
+        <AppGuide />
       </div>
     </main>
   )
