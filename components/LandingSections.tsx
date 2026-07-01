@@ -15,16 +15,18 @@ export type Emissions = {
 export default function LandingSections({
   sections,
   emissions,
+  texts,
 }: {
   sections: LandingSection[]
   emissions: Emissions
+  texts: Record<string, string>
 }) {
   if (sections.length === 0) return null
 
   return (
     <>
       {sections.map((s, i) => {
-        if (i === 0) return <GpsIntro key={s.id} />
+        if (i === 0) return <GpsIntro key={s.id} texts={texts} />
         if (i === 1) return <ProjectSection key={s.id} s={s} />
         if (i === 2) return <PolicySection key={s.id} s={s} />
         if (i === 3) return <DataSection key={s.id} s={s} emissions={emissions} />
@@ -64,66 +66,50 @@ function PlantSvg() {
   )
 }
 
-// 1) G.P.S 소개 (전용 디자인 — 최종 콘텐츠 고정)
-function GpsIntro() {
+// 1) G.P.S 소개 (전용 디자인 — 문구는 관리자 편집 텍스트)
+function GpsIntro({ texts }: { texts: Record<string, string> }) {
   return (
     <section className="scroll-mt-20 bg-[#f4f0e6] px-6 py-14 sm:py-16">
       <div className="mx-auto max-w-2xl">
         <span className="inline-flex items-center gap-2 rounded-full bg-[#e8e1d1] px-3.5 py-1.5 text-xs font-semibold text-[#6b6656]">
           <span className="h-1.5 w-1.5 rounded-full bg-[#a98a5e]" />
-          전남대학교 환경에너지공학과 환경봉사 동아리
+          {texts['gps.badge']}
         </span>
-        <h2 className="mt-5 font-serif text-[28px] font-bold leading-[1.35] tracking-tight text-[#2b2b26] sm:text-[34px]">
-          그린마일 팜을 만든 사람들,
-          <br />
-          <span className="text-gm-green">G.P.S</span> 입니다
+        <h2 className="mt-5 whitespace-pre-line font-serif text-[28px] font-bold leading-[1.35] tracking-tight text-[#2b2b26] sm:text-[34px]">
+          {texts['gps.title']}
         </h2>
-        <p className="mt-5 text-[15px] leading-[1.85] text-[#6b6656]">
-          G.P.S(Green Partner Society)는 2016년 창립 이래 전남대학교 환경에너지공학과 재학생들이 이끌어온 환경봉사
-          동아리입니다. 단순한 환경 정화 활동을 넘어, 환경·에너지 공학을 공부하는 예비 공학도로서 지역이 마주한
-          자원순환·탄소중립 문제에 직접 개입하고 실천적인 해결책을 제시하는 것을 목표로 활동하고 있습니다.
-        </p>
+        <p className="mt-5 whitespace-pre-line text-[15px] leading-[1.85] text-[#6b6656]">{texts['gps.intro']}</p>
 
         <div className="mt-7 grid grid-cols-3 gap-2.5">
-          <GpsStat value="2016" label="동아리 창립연도" />
-          <GpsStat value="99명" label="전체 회원수" />
-          <GpsStat value="환경에너지공학과" label="소속 학과" small />
+          <GpsStat value={texts['gps.stat1_value']} label={texts['gps.stat1_label']} />
+          <GpsStat value={texts['gps.stat2_value']} label={texts['gps.stat2_label']} />
+          <GpsStat value={texts['gps.stat3_value']} label={texts['gps.stat3_label']} small />
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="rounded-2xl bg-[#2f3d2f] p-5">
-            <p className="text-[11px] font-bold tracking-wider text-[#c9a978]">자체 활동</p>
-            <h3 className="mt-2 text-[17px] font-bold text-white">일상의 광주를 더욱 깨끗하게</h3>
-            <p className="mt-2.5 text-[13px] leading-relaxed text-[#cfd3c8]">
-              무등산 등산로, 전남대 캠퍼스, 자전거 도로 등 부원들이 일상에서 이용하는 공간을 직접 찾아 정화합니다.
-              무등산 플로깅, 교내 플로깅·분리배출 캠페인, 캠퍼스 자전거 도로 플로깅을 자체적으로 기획하고 운영하고
-              있습니다.
-            </p>
+            <p className="text-[11px] font-bold tracking-wider text-[#c9a978]">{texts['gps.act1_label']}</p>
+            <h3 className="mt-2 text-[17px] font-bold text-white">{texts['gps.act1_title']}</h3>
+            <p className="mt-2.5 whitespace-pre-line text-[13px] leading-relaxed text-[#cfd3c8]">{texts['gps.act1_body']}</p>
           </div>
           <div className="rounded-2xl border border-[#e0d9c8] bg-white p-5">
-            <p className="text-[11px] font-bold tracking-wider text-[#b08b57]">지역 연계 활동</p>
-            <h3 className="mt-2 text-[17px] font-bold text-[#2b2b26]">북구자원봉사센터와 함께</h3>
-            <p className="mt-2.5 text-[13px] leading-relaxed text-[#6b6656]">
-              광주광역시 북구자원봉사센터와 연계해 지역사회를 위한 봉사를 이어갑니다. 장마철 하수구 예찰 및 침수 피해
-              복구, 지역 행사 운영 보조 등 지역 주민의 안전과 일상을 지키는 활동에 함께하고 있습니다.
-            </p>
+            <p className="text-[11px] font-bold tracking-wider text-[#b08b57]">{texts['gps.act2_label']}</p>
+            <h3 className="mt-2 text-[17px] font-bold text-[#2b2b26]">{texts['gps.act2_title']}</h3>
+            <p className="mt-2.5 whitespace-pre-line text-[13px] leading-relaxed text-[#6b6656]">{texts['gps.act2_body']}</p>
           </div>
         </div>
 
         <div className="my-7 border-t border-[#e0d9c8]" />
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[13px] leading-relaxed text-[#6b6656]">
-            그린마일 팜 챌린지는 광주광역시 자원봉사센터 단체 자원봉사 프로그램 “함께 그린(Green) 광주” 공모 사업의
-            일환으로, 환경 및 에너지 공학의 지식을 지역 사회에 환원하기 위한 G.P.S의 첫 시민 참여형 프로젝트입니다.
-          </p>
+          <p className="whitespace-pre-line text-[13px] leading-relaxed text-[#6b6656]">{texts['gps.bottom']}</p>
           <a
             href="https://www.instagram.com/gps_cnu"
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 rounded-full bg-[#a98a5e] px-5 py-3 text-center text-sm font-bold text-white hover:opacity-90"
           >
-            G.P.S 인스타그램 보기 →
+            {texts['gps.insta_label']}
           </a>
         </div>
       </div>
