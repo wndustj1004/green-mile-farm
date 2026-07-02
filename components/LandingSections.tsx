@@ -3,6 +3,7 @@ import CropCarousel from './CropCarousel'
 import TransportSection from './TransportSection'
 import ProjectSection from './ProjectSection'
 import EmissionDataSection from './EmissionDataSection'
+import Reveal from './Reveal'
 
 // 메인페이지 아래로 스크롤하면 보이는 소개 섹션들.
 // 텍스트(제목·본문)는 관리자 페이지(/admin/content)에서 수정 → DB에서 읽어옴.
@@ -19,18 +20,39 @@ export default function LandingSections({
   return (
     <>
       {sections.map((s, i) => {
-        if (i === 0) return <GpsIntro key={s.id} texts={texts} />
-        if (i === 1) return <ProjectSection key={s.id} />
+        if (i === 0)
+          return (
+            <Reveal key={s.id}>
+              <GpsIntro texts={texts} />
+            </Reveal>
+          )
+        if (i === 1)
+          return (
+            <Reveal key={s.id}>
+              <ProjectSection />
+            </Reveal>
+          )
         if (i === 2)
           return (
             <div key={s.id}>
-              <TransportSection />
+              <Reveal>
+                <TransportSection />
+              </Reveal>
               <EmissionDataSection />
             </div>
           )
         if (i === 3) return null // 교통부문 온실가스 → 대중교통 섹션에 통합됨
-        if (i === 4) return <CarouselSection key={s.id} s={s} />
-        return <StorySection key={s.id} s={s} />
+        if (i === 4)
+          return (
+            <Reveal key={s.id}>
+              <CarouselSection s={s} />
+            </Reveal>
+          )
+        return (
+          <Reveal key={s.id}>
+            <StorySection s={s} />
+          </Reveal>
+        )
       })}
     </>
   )
