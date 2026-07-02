@@ -6,6 +6,7 @@ import { TRANSPORTS, TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
 import StageSlider from './StageSlider'
 import WeeklyRanking, { type RankItem } from '@/components/WeeklyRanking'
 import AppGuide from '@/components/AppGuide'
+import Reveal from '@/components/Reveal'
 import NameEditor from './NameEditor'
 import { logoutAction } from './actions'
 
@@ -158,7 +159,9 @@ export default async function DashboardPage() {
         </div>
 
         {/* 작물 성장 단계 슬라이더 (원본 그대로) */}
-        <StageSlider targetKg={targetKg} totalKg={totalKg} />
+        <Reveal>
+          <StageSlider targetKg={targetKg} totalKg={totalKg} />
+        </Reveal>
 
         {/* 최근 인증 */}
         {recentRows.length > 0 && (
@@ -211,10 +214,14 @@ export default async function DashboardPage() {
         </Link>
 
         {/* 이번 주 랭킹 (상위 6명) — Ranking.html 디자인 */}
-        <WeeklyRanking items={ranking} weekLabel={weekLabel} />
+        <Reveal>
+          <WeeklyRanking items={ranking} weekLabel={weekLabel} />
+        </Reveal>
 
         {/* 앱처럼 사용하기 (홈 화면에 추가 가이드) */}
-        <AppGuide />
+        <Reveal>
+          <AppGuide />
+        </Reveal>
       </div>
     </main>
   )

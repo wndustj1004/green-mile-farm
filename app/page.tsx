@@ -5,6 +5,7 @@ import { resolveSiteTexts } from '@/lib/siteText'
 import LandingSections from '@/components/LandingSections'
 import CertifyTutorial from '@/components/CertifyTutorial'
 import RewardSection from '@/components/RewardSection'
+import Reveal from '@/components/Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -98,7 +99,7 @@ export default async function Home() {
 
       {/* 참여 4단계 */}
       <section className="bg-gm-cream px-6 py-12 sm:py-14">
-        <div className="mx-auto max-w-2xl">
+        <Reveal className="mx-auto max-w-2xl">
           <div className="mb-7 text-center">
             <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['steps.label']}</span>
             <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['steps.title']}</h2>
@@ -109,23 +110,23 @@ export default async function Home() {
             <StepRow n={3} title={T['steps.s3_title']}>{T['steps.s3_desc']}</StepRow>
             <StepRow n={4} title={T['steps.s4_title']}>{T['steps.s4_desc']}</StepRow>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* 이동 인증 튜토리얼 */}
       <section className="bg-gm-sage px-6 py-12 sm:py-14">
-        <div className="mx-auto max-w-2xl">
+        <Reveal className="mx-auto max-w-2xl">
           <div className="mb-6 text-center">
             <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['guide.label']}</span>
             <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['guide.title']}</h2>
           </div>
           <CertifyTutorial texts={T} examples={[T['guide.img_map'], T['guide.img_place'], T['guide.img_step3_map']]} />
-        </div>
+        </Reveal>
       </section>
 
       {/* 실시간 임팩트 */}
       <section className="bg-gm-cream px-6 py-12 sm:py-14">
-        <div className="mx-auto max-w-2xl">
+        <Reveal className="mx-auto max-w-2xl">
           <div className="mb-6 text-center">
             <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['impact.label']}</span>
             <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['impact.title']}</h2>
@@ -148,28 +149,35 @@ export default async function Home() {
           >
             {user ? '내 농장 보기' : T['impact.cta']}
           </Link>
-        </div>
+        </Reveal>
       </section>
 
       {/* 작물 보상 + 작물관리팀 케어로그 */}
-      <RewardSection texts={T} />
+      <Reveal>
+        <RewardSection texts={T} />
+      </Reveal>
 
       {/* 소개 섹션 (관리자 편집 + 이미지 첨부 + 배출계수 연동 + 작물 사진 캐러셀) */}
       <LandingSections sections={sections} texts={T} />
 
-      {/* CTA */}
-      <section className="bg-gm-cream px-6 py-9">
-        <div className="mx-auto max-w-2xl rounded-3xl bg-gm-green px-6 py-9 text-center">
-          <p className="whitespace-pre-line text-[19px] font-bold leading-[1.5] tracking-tight text-white">
-            {T['cta.title']}
+      {/* CTA (대중교통 섹션에서 이동 — 회원가입 진입 한 곳) */}
+      <section className="bg-gm-cream px-6 py-16 text-center sm:py-20">
+        <Reveal className="mx-auto max-w-2xl">
+          <h3 className="text-[24px] font-extrabold leading-tight tracking-tight text-[#14201a] sm:text-[34px]">
+            광주가 그리는 미래로,
+            <br />
+            함께 발돋움할 시간입니다
+          </h3>
+          <p className="mx-auto mt-3.5 max-w-[44ch] text-[16px] leading-relaxed text-gm-muted">
+            당신의 한 걸음이 분담률 42.6%를 향한 도시의 변화가 됩니다. 그린마일 팜에서 그 변화를 직접 키워보세요.
           </p>
           <Link
             href={user ? '/dashboard' : '/signup'}
-            className="mt-5 inline-block rounded-full bg-gm-cream px-8 py-3 text-sm font-bold text-gm-green hover:opacity-90"
+            className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#1e8a4c] px-8 py-4 text-[16px] font-bold text-white hover:opacity-90"
           >
-            {user ? '내 농장 보기' : T['cta.button']}
+            {user ? '내 농장 보기' : '챌린지 시작하기'} <span>→</span>
           </Link>
-        </div>
+        </Reveal>
       </section>
 
       <footer className="border-t border-gm-line bg-gm-cream py-6 text-center text-xs text-gm-muted2">

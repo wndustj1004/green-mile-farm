@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 // 친환경 대중교통 정책·현황 + 교통부문 온실가스 통합 섹션 (제공된 디자인 반영)
 export default function TransportSection() {
   return (
@@ -119,25 +117,7 @@ export default function TransportSection() {
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="mt-14 text-center">
-          <h3 className="text-[24px] font-extrabold leading-tight tracking-tight text-[#14201a] sm:text-[34px]">
-            광주가 그리는 미래로,
-            <br />
-            함께 발돋움할 시간입니다
-          </h3>
-          <p className="mx-auto mt-3.5 max-w-[44ch] text-[16px] leading-relaxed text-[#5a6660]">
-            당신의 한 걸음이 분담률 42.6%를 향한 도시의 변화가 됩니다. 그린마일 팜에서 그 변화를 직접 키워보세요.
-          </p>
-          <Link
-            href="/signup"
-            className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#1e8a4c] px-8 py-4 text-[16px] font-bold text-white hover:opacity-90"
-          >
-            챌린지 시작하기 <span>→</span>
-          </Link>
-        </div>
-
-        <p className="mt-14 border-t border-[#14201a]/[0.08] pt-6 text-[12.5px] leading-relaxed text-[#8a938d]">
+        <p className="mt-16 border-t border-[#14201a]/[0.08] pt-6 text-[12.5px] leading-relaxed text-[#8a938d]">
           <b className="font-bold text-[#5a6660]">출처</b> · 광주광역시 「대·자·보 도시」 전환 정책(2024.6) 및 친환경
           대중교통 현황 자료. 시내버스 101개 노선(1,044대)·대중교통 분담률 22.9%(2024)·자전거도로 669.4km/539개소(2024.12)·G-패스
           월평균 90만 명(2025.8)·1km당 CO₂ 배출계수(승용차 211.1g/버스 29.1g/지하철 28.7g/도보·자전거 0g)·분담률 목표

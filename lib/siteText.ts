@@ -75,10 +75,8 @@ export const SITE_TEXT_FIELDS: SiteTextField[] = [
   { key: 'gps.bottom', group: 'G.P.S 소개', label: '하단 문구', def: '그린마일 팜 챌린지는 광주광역시 자원봉사센터 단체 자원봉사 프로그램 “함께 그린(Green) 광주” 공모 사업의 일환으로, 환경 및 에너지 공학의 지식을 지역 사회에 환원하기 위한 G.P.S의 첫 시민 참여형 프로젝트입니다.', multiline: true },
   { key: 'gps.insta_label', group: 'G.P.S 소개', label: '인스타 버튼 문구', def: 'G.P.S 인스타그램 보기 →' },
 
-  // CTA / 푸터
-  { key: 'cta.title', group: 'CTA · 푸터', label: 'CTA 제목', def: '오늘부터,\n친환경 한 걸음을 시작해요', multiline: true },
-  { key: 'cta.button', group: 'CTA · 푸터', label: 'CTA 버튼(비로그인)', def: '회원가입하기' },
-  { key: 'footer.text', group: 'CTA · 푸터', label: '푸터', def: '🌿 그린마일 팜 · G.P.S' },
+  // 푸터
+  { key: 'footer.text', group: '푸터', label: '푸터', def: '🌿 그린마일 팜 · G.P.S' },
 ]
 
 // 메인페이지 고정 섹션의 편집 가능한 이미지 필드 (URL을 site_texts에 저장)
