@@ -58,8 +58,8 @@ export default async function AdminContentPage() {
       <section className="border-t border-gray-200 pt-6">
         <h2 className="text-lg font-bold text-gray-800">③ 메인페이지 이미지</h2>
         <p className="mt-1 text-sm text-gray-500">
-          이동 인증 가이드 카드에 들어갈 예시 사진(지도 스크린샷 · 실제 공간 사진)을 올립니다. 올리면 가이드 슬라이드에
-          바로 표시됩니다.
+          이동 인증 가이드 예시 사진(STEP 2 지도 · STEP 3 실제 공간 · STEP 3 지도)과 작물 재배 현장 사진 2장을 올립니다.
+          올리면 메인페이지에 바로 표시됩니다.
         </p>
         <div className="mt-4">
           <SiteImageEditor initial={siteTexts} />
