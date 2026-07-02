@@ -36,7 +36,7 @@ export default function CertifyTutorial({
       body: (
         <div className="mt-3 grid grid-cols-2 gap-2">
           <ExampleFrame url={placeEx} label="① 실제 공간 사진" small />
-          <ExampleFrame url={mapEx} label="② 지도 현재위치" small />
+          <ExampleFrame url={examples[2]} label="② 지도 현재위치" small />
         </div>
       ),
     },

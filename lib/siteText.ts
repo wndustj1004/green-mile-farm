@@ -48,6 +48,14 @@ export const SITE_TEXT_FIELDS: SiteTextField[] = [
   { key: 'impact.l_target', group: '실시간 임팩트', label: '카드 라벨(목표)', def: '1인 목표 감축량' },
   { key: 'impact.cta', group: '실시간 임팩트', label: 'CTA 버튼(비로그인)', def: '챌린지 참여하기' },
 
+  // 작물 재배 현장 (REAL FARM)
+  { key: 'realfarm.tag', group: '작물 재배 현장', label: '태그', def: 'REAL FARM · 진짜로 키우고 있어요' },
+  { key: 'realfarm.title', group: '작물 재배 현장', label: '제목', def: '임원진이 심고, 물 주고,\n수확까지 책임집니다', multiline: true },
+  { key: 'realfarm.lead', group: '작물 재배 현장', label: '설명', def: '2026년 봄, G.P.S 임원진이 폐플라스틱 화분과 커피박 퇴비로 방울토마토·스위트 바질을 직접 심었습니다. 아래는 실제 재배 현장입니다.', multiline: true },
+  { key: 'realfarm.caption1', group: '작물 재배 현장', label: '사진1 설명', def: '🍅 커피박 퇴비를 섞은 화분에 방울토마토 모종을 심는 날' },
+  { key: 'realfarm.caption2', group: '작물 재배 현장', label: '사진2 설명', def: '🌿 지지대를 세운 토마토 3화분과 잎이 오른 스위트 바질' },
+  { key: 'realfarm.note', group: '작물 재배 현장', label: '하단 주석', def: '※ 사진: G.P.S 임원진 작물 재배 현장 (2026)' },
+
   // G.P.S 소개
   { key: 'gps.badge', group: 'G.P.S 소개', label: '배지', def: '전남대학교 환경에너지공학과 환경봉사 동아리' },
   { key: 'gps.title', group: 'G.P.S 소개', label: '헤드라인', def: '그린마일 팜을 만든 사람들,\nG.P.S 입니다', multiline: true },
@@ -77,8 +85,11 @@ export const SITE_TEXT_FIELDS: SiteTextField[] = [
 export type SiteImageField = { key: string; group: string; label: string }
 
 export const SITE_IMAGE_FIELDS: SiteImageField[] = [
-  { key: 'guide.img_map', group: '이동 인증 가이드', label: '지도 스크린샷 예시 (STEP 2·3에 표시)' },
-  { key: 'guide.img_place', group: '이동 인증 가이드', label: '실제 공간 사진 예시 (STEP 3에 표시)' },
+  { key: 'guide.img_map', group: '이동 인증 가이드', label: 'STEP 2 · 지도 스크린샷' },
+  { key: 'guide.img_place', group: '이동 인증 가이드', label: 'STEP 3 · ① 실제 공간 사진' },
+  { key: 'guide.img_step3_map', group: '이동 인증 가이드', label: 'STEP 3 · ② 지도 현재위치 스크린샷' },
+  { key: 'realfarm.photo1', group: '작물 재배 현장', label: '재배 현장 사진 ①' },
+  { key: 'realfarm.photo2', group: '작물 재배 현장', label: '재배 현장 사진 ②' },
 ]
 
 export type SiteTexts = Record<string, string>

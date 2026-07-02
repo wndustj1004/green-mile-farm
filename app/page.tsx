@@ -119,7 +119,7 @@ export default async function Home() {
             <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['guide.label']}</span>
             <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['guide.title']}</h2>
           </div>
-          <CertifyTutorial texts={T} examples={[T['guide.img_map'], T['guide.img_place']]} />
+          <CertifyTutorial texts={T} examples={[T['guide.img_map'], T['guide.img_place'], T['guide.img_step3_map']]} />
         </div>
       </section>
 
@@ -152,7 +152,7 @@ export default async function Home() {
       </section>
 
       {/* 작물 보상 + 작물관리팀 케어로그 */}
-      <RewardSection />
+      <RewardSection texts={T} />
 
       {/* 소개 섹션 (관리자 편집 + 이미지 첨부 + 배출계수 연동 + 작물 사진 캐러셀) */}
       <LandingSections sections={sections} texts={T} />

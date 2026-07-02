@@ -1,5 +1,6 @@
 // 작물 보상 + 작물관리팀 케어로그 섹션 (제공된 디자인 반영, 정적 렌더)
-export default function RewardSection() {
+// REAL FARM(재배 현장) 텍스트·사진은 관리자 편집 텍스트/이미지 사용.
+export default function RewardSection({ texts }: { texts: Record<string, string> }) {
   return (
     <section className="scroll-mt-20 bg-[#f4f2ec] px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-3xl">
@@ -42,26 +43,23 @@ export default function RewardSection() {
           </div>
         </div>
 
-        {/* Real farm */}
+        {/* Real farm (관리자 편집) */}
         <div className="mt-20 text-center">
           <span className="inline-block rounded-full bg-[#e8f4ec] px-3.5 py-2 text-[12.5px] font-bold tracking-[0.14em] text-[#1e8a4c]">
-            REAL FARM · 진짜로 키우고 있어요
+            {texts['realfarm.tag']}
           </span>
-          <h3 className="mt-4 text-[24px] font-extrabold leading-tight tracking-tight text-[#1a1b23] sm:text-[36px]">
-            임원진이 심고, 물 주고,
-            <br />
-            수확까지 책임집니다
+          <h3 className="mt-4 whitespace-pre-line text-[24px] font-extrabold leading-tight tracking-tight text-[#1a1b23] sm:text-[36px]">
+            {texts['realfarm.title']}
           </h3>
-          <p className="mx-auto mt-3.5 max-w-[46ch] text-[16px] leading-[1.7] text-[#5b5e6b]">
-            2026년 봄, G.P.S 임원진이 폐플라스틱 화분과 커피박 퇴비로 방울토마토·스위트 바질을 직접 심었습니다. 아래는 실제 재배
-            현장입니다.
+          <p className="mx-auto mt-3.5 max-w-[46ch] whitespace-pre-line text-[16px] leading-[1.7] text-[#5b5e6b]">
+            {texts['realfarm.lead']}
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <PhotoFallback e="🌱" cap="🍅 커피박 퇴비를 섞은 화분에 방울토마토 모종을 심는 날" />
-          <PhotoFallback e="🌿" cap="🌿 지지대를 세운 토마토 3화분과 잎이 오른 스위트 바질" />
+          <Photo url={texts['realfarm.photo1']} e="🌱" cap={texts['realfarm.caption1']} />
+          <Photo url={texts['realfarm.photo2']} e="🌿" cap={texts['realfarm.caption2']} />
         </div>
-        <p className="mt-5 text-center text-[13.5px] text-[#8e919c]">※ 사진: G.P.S 임원진 작물 재배 현장 (2026)</p>
+        <p className="mt-5 text-center text-[13.5px] text-[#8e919c]">{texts['realfarm.note']}</p>
 
         {/* Care log */}
         <div className="mt-20 grid grid-cols-1 items-center gap-10 md:grid-cols-[1fr_360px]">
@@ -141,23 +139,30 @@ function RewardItem({ e, t, s }: { e: string; t: string; s: string }) {
   )
 }
 
-function PhotoFallback({ e, cap }: { e: string; cap: string }) {
+function Photo({ url, e, cap }: { url?: string; e: string; cap: string }) {
   return (
     <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
-      <div
-        className="flex h-full w-full flex-col items-center justify-center gap-3 p-5 text-center text-[15px] font-bold text-[#1e8a4c]"
-        style={{ background: 'linear-gradient(160deg,#EAF5EE,#DCEEE2)' }}
-      >
-        <span className="text-[44px]">{e}</span>
-        재배 현장 사진
-        <span className="text-[12px] font-medium text-[#8e919c]">추후 사진으로 교체됩니다</span>
-      </div>
-      <div
-        className="absolute inset-x-0 bottom-0 px-5 pb-4 pt-11 text-[13.5px] font-semibold text-white"
-        style={{ background: 'linear-gradient(transparent,rgba(10,20,14,.72))' }}
-      >
-        {cap}
-      </div>
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <div
+          className="flex h-full w-full flex-col items-center justify-center gap-3 p-5 text-center text-[15px] font-bold text-[#1e8a4c]"
+          style={{ background: 'linear-gradient(160deg,#EAF5EE,#DCEEE2)' }}
+        >
+          <span className="text-[44px]">{e}</span>
+          재배 현장 사진
+          <span className="text-[12px] font-medium text-[#8e919c]">추후 사진으로 교체됩니다</span>
+        </div>
+      )}
+      {cap && (
+        <div
+          className="absolute inset-x-0 bottom-0 px-5 pb-4 pt-11 text-[13.5px] font-semibold text-white"
+          style={{ background: 'linear-gradient(transparent,rgba(10,20,14,.72))' }}
+        >
+          {cap}
+        </div>
+      )}
     </div>
   )
 }
