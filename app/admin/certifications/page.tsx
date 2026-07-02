@@ -80,18 +80,25 @@ export default async function AdminCertsPage() {
               사진 메타데이터: {summarizeExif(c.exif_data)}
             </p>
 
-            {/* 처리 정보 (처리 시각·반려 사유) */}
+            {/* 처리 정보 (처리 시각·반려 사유·거리 수정 이력) */}
             {c.processed_at && (
               <p className="mt-2 text-xs text-gray-400">
                 처리 시각: {new Date(c.processed_at).toLocaleString('ko-KR')}
                 {c.status === 'rejected' && c.reject_reason && (
                   <span className="mt-0.5 block text-red-500">반려 사유: {c.reject_reason}</span>
                 )}
+                {c.distance_edited_at && (
+                  <span className="mt-0.5 block text-amber-600">
+                    이동거리 수정: {Number(c.original_distance_km)}km → {Number(c.distance_km)}km
+                    {c.distance_edit_reason ? ` · ${c.distance_edit_reason}` : ''} ·{' '}
+                    {new Date(c.distance_edited_at).toLocaleString('ko-KR')}
+                  </span>
+                )}
               </p>
             )}
 
-            {/* 승인/반려 (반려는 사유 입력 모달) */}
-            <CertActions id={c.id} />
+            {/* 승인(거리 수정 가능)/반려(사유 입력) 모달 */}
+            <CertActions id={c.id} distanceKm={Number(c.distance_km)} />
           </div>
         )
       })}

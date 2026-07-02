@@ -2,8 +2,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { LandingSection } from '@/app/admin/actions'
 import { resolveSiteTexts } from '@/lib/siteText'
-import LandingSections, { type Emissions } from '@/components/LandingSections'
+import LandingSections from '@/components/LandingSections'
 import CertifyTutorial from '@/components/CertifyTutorial'
+import RewardSection from '@/components/RewardSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,17 +26,10 @@ export default async function Home() {
 
   const { data: settings } = await supabase
     .from('settings')
-    .select('target_co2_kg, challenge_end, car_emission, walk_emission, bike_emission, bus_emission, subway_emission')
+    .select('target_co2_kg, challenge_end')
     .eq('id', 1)
     .single()
   const targetKg = Number(settings?.target_co2_kg ?? 5)
-  const emissions: Emissions = {
-    car: Number(settings?.car_emission ?? 210),
-    walk: Number(settings?.walk_emission ?? 0),
-    bike: Number(settings?.bike_emission ?? 0),
-    bus: Number(settings?.bus_emission ?? 27.7),
-    subway: Number(settings?.subway_emission ?? 1.53),
-  }
 
   let dday: number | null = null
   if (settings?.challenge_end) {
@@ -157,28 +151,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 작물 보상 안내 */}
-      <section className="bg-gm-cream px-5 py-8">
-        <div className="mx-auto max-w-2xl rounded-3xl bg-[#4a5cc7] px-7 py-9">
-          <span className="text-[11px] font-bold tracking-[2px] text-[#c9d1f5]">{T['reward.label']}</span>
-          <h2 className="mt-2.5 whitespace-pre-line text-[23px] font-bold leading-snug tracking-tight text-white">
-            {T['reward.title']}
-          </h2>
-          <ul className="mt-4 flex flex-col gap-2 text-sm leading-relaxed text-[#e5e9fb]">
-            <li>{T['reward.bullet1']}</li>
-            <li>{T['reward.bullet2']}</li>
-          </ul>
-          <div className="mt-6 grid grid-cols-4 gap-2">
-            <RewardItem label={T['reward.item1']}><TomatoSvg /></RewardItem>
-            <RewardItem label={T['reward.item2']}><BasilSvg /></RewardItem>
-            <RewardItem label={T['reward.item3']}><BeeswaxSvg /></RewardItem>
-            <RewardItem label={T['reward.item4']}><CoffeeSvg /></RewardItem>
-          </div>
-        </div>
-      </section>
+      {/* 작물 보상 + 작물관리팀 케어로그 */}
+      <RewardSection />
 
       {/* 소개 섹션 (관리자 편집 + 이미지 첨부 + 배출계수 연동 + 작물 사진 캐러셀) */}
-      <LandingSections sections={sections} emissions={emissions} texts={T} />
+      <LandingSections sections={sections} texts={T} />
 
       {/* CTA */}
       <section className="bg-gm-cream px-6 py-9">
@@ -234,15 +211,6 @@ function ImpactCard({ emoji, value, unit, label }: { emoji: string; value: strin
   )
 }
 
-function RewardItem({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/95 px-1 py-3">
-      {children}
-      <span className="text-[10px] font-semibold text-gm-ink2">{label}</span>
-    </div>
-  )
-}
-
 function LeafMark() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -267,48 +235,3 @@ function TomatoPot() {
   )
 }
 
-function TomatoSvg() {
-  return (
-    <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
-      <circle cx="20" cy="23" r="12" fill="#df6650" />
-      <circle cx="16" cy="20" r="3" fill="#e9836a" />
-      <path d="M20 11 C20 7 24 5 27 5 C27 9 24 11 20 11 Z" fill="#4f8d61" />
-      <path d="M20 11 C20 7 16 5 13 5 C13 9 16 11 20 11 Z" fill="#62a373" />
-    </svg>
-  )
-}
-
-function BasilSvg() {
-  return (
-    <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
-      <rect x="18.5" y="20" width="3" height="15" rx="1.5" fill="#3f7d51" />
-      <path d="M20 24 C13 24 8 20 7 13 C15 12 20 17 20 24 Z" fill="#62a373" />
-      <path d="M20 20 C27 20 32 15 33 9 C25 8 20 13 20 20 Z" fill="#4f8d61" />
-      <path d="M20 30 C15 30 11 27 10 22 C17 21 20 25 20 30 Z" fill="#54a06b" />
-    </svg>
-  )
-}
-
-function BeeswaxSvg() {
-  return (
-    <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
-      <rect x="7" y="9" width="26" height="22" rx="4" fill="#f2c94c" />
-      <path d="M33 9 L25 17 L33 17 Z" fill="#e0b53f" />
-      <circle cx="14" cy="16" r="1.6" fill="#e0b53f" />
-      <circle cx="20" cy="20" r="1.6" fill="#e0b53f" />
-      <circle cx="26" cy="24" r="1.6" fill="#e0b53f" />
-      <circle cx="14" cy="24" r="1.6" fill="#e0b53f" />
-    </svg>
-  )
-}
-
-function CoffeeSvg() {
-  return (
-    <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
-      <path d="M9 20 L31 20 L28 33 Q27.6 34 26.5 34 L13.5 34 Q12.4 34 12 33 Z" fill="#7b4a2d" />
-      <ellipse cx="20" cy="20" rx="11" ry="3.5" fill="#8a5636" />
-      <path d="M20 20 C20 16 23 14 26 14 C26 18 23 20 20 20 Z" fill="#4f8d61" />
-      <rect x="19" y="10" width="2.5" height="7" rx="1.2" fill="#3f7d51" />
-    </svg>
-  )
-}

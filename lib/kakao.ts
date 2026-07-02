@@ -34,7 +34,11 @@ async function geocode(query: string): Promise<Coord | null> {
   return null
 }
 
-// 두 좌표 사이 직선거리(km) — 카카오 길찾기 실패 시 대비책
+// 직선거리 → 실제 이동경로 근사 보정계수. 방향과 무관하게 항상 동일.
+// (일방통행·회전제한을 반영하는 자동차 길찾기 API는 A→B와 B→A가 달라 부적합 → 사용 안 함)
+export const WALK_ROUTE_FACTOR = 1.3
+
+// 두 좌표 사이 직선거리(km) — 하버사인 공식 (방향 무관·대칭)
 function haversineKm(a: Coord, b: Coord): number {
   const R = 6371
   const toRad = (deg: number) => (deg * Math.PI) / 180
@@ -44,23 +48,6 @@ function haversineKm(a: Coord, b: Coord): number {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2
   return 2 * R * Math.asin(Math.sqrt(s))
-}
-
-// 카카오모빌리티 길찾기(도로 경로 거리 m) — 직선보다 실제 이동에 가까움
-async function routeKm(origin: Coord, dest: Coord): Promise<number | null> {
-  const key = process.env.KAKAO_REST_API_KEY!
-  try {
-    const res = await fetch(
-      `https://apis-navi.kakaomobility.com/v1/directions?origin=${origin.lng},${origin.lat}&destination=${dest.lng},${dest.lat}`,
-      { headers: { Authorization: `KakaoAK ${key}` } }
-    )
-    if (!res.ok) return null
-    const json = await res.json()
-    const meters = json.routes?.[0]?.summary?.distance
-    return typeof meters === 'number' ? meters / 1000 : null
-  } catch {
-    return null
-  }
 }
 
 export async function calcDistanceKm(
@@ -75,28 +62,18 @@ export async function calcDistanceKm(
   const end = await geocode(endQuery)
   if (!end) return { error: '종료 주소를 찾을 수 없습니다. 더 정확히 입력해보세요.' }
 
-  const route = await routeKm(start, end)
-  if (route != null) return { km: Math.round(route * 100) / 100, method: '도로 경로' }
-
-  const straight = haversineKm(start, end)
-  return { km: Math.round(straight * 100) / 100, method: '직선 거리(근사)' }
+  const km = haversineKm(start, end) * WALK_ROUTE_FACTOR
+  return { km: Math.round(km * 100) / 100, method: '직선거리(보정 계수 적용)' }
 }
 
-// 지도 핀(건물 단위로 정규화된) 좌표로 거리 계산. 도로경로 로직(routeKm) 그대로 재사용.
-// 좌표 정규화는 클라이언트(MapPicker)에서 주소 기반으로 수행하므로 여기선 받은 좌표를 그대로 사용.
+// 지도 핀(건물 단위로 정규화된) 좌표로 거리 계산.
+// 방향 무관: 하버사인 직선거리 × 보정계수. A→B와 B→A, 같은 건물 내 지점은 항상 동일.
 export async function calcDistanceByCoords(
   start: { lat: number; lng: number },
   end: { lat: number; lng: number }
 ): Promise<{ km: number; method: string } | { error: string }> {
-  if (!process.env.KAKAO_REST_API_KEY) {
-    return { error: '카카오 키가 설정되지 않았습니다. 직접 입력을 사용해주세요.' }
-  }
   const o = { lng: start.lng, lat: start.lat }
   const d = { lng: end.lng, lat: end.lat }
-
-  const route = await routeKm(o, d)
-  if (route != null) return { km: Math.round(route * 100) / 100, method: '도로 경로' }
-
-  const straight = haversineKm(o, d)
-  return { km: Math.round(straight * 100) / 100, method: '직선 거리(근사)' }
+  const km = haversineKm(o, d) * WALK_ROUTE_FACTOR
+  return { km: Math.round(km * 100) / 100, method: '직선거리(보정 계수 적용)' }
 }
