@@ -99,12 +99,16 @@ export default function CertifyTutorial({
 
 function ExampleFrame({ url, label, small }: { url?: string; label: string; small?: boolean }) {
   return (
-    <div className={`mt-3 overflow-hidden rounded-xl border border-gm-line ${small ? 'h-32' : 'h-44'}`}>
+    <div
+      className={`mx-auto mt-3 aspect-[3/4] w-full overflow-hidden rounded-xl border border-gm-line bg-gm-cream2 ${
+        small ? '' : 'max-w-[240px]'
+      }`}
+    >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={label} className="h-full w-full object-cover" />
+        <img src={url} alt={label} className="h-full w-full object-contain" />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center bg-gm-cream2 text-center text-[11px] text-gm-muted2">
+        <div className="flex h-full w-full flex-col items-center justify-center text-center text-[11px] text-gm-muted2">
           <span className="mb-1 text-lg">🖼️</span>
           {label}
           <span className="mt-0.5 text-[10px]">(예시 이미지 준비 중)</span>

@@ -48,16 +48,6 @@ export const SITE_TEXT_FIELDS: SiteTextField[] = [
   { key: 'impact.l_target', group: '실시간 임팩트', label: '카드 라벨(목표)', def: '1인 목표 감축량' },
   { key: 'impact.cta', group: '실시간 임팩트', label: 'CTA 버튼(비로그인)', def: '챌린지 참여하기' },
 
-  // 작물 보상
-  { key: 'reward.label', group: '작물 보상', label: '라벨', def: 'REWARD' },
-  { key: 'reward.title', group: '작물 보상', label: '제목', def: '목표 5kg 달성 시,\n진짜 작물을 받아요!', multiline: true },
-  { key: 'reward.bullet1', group: '작물 보상', label: '항목1', def: '🌱 커피박(커피 찌꺼기) 퇴비로 기른 방울토마토와 스위트 바질', multiline: true },
-  { key: 'reward.bullet2', group: '작물 보상', label: '항목2', def: '🐝 비닐 대신 여러 번 재사용 가능한 밀랍랩에 포장해 배송', multiline: true },
-  { key: 'reward.item1', group: '작물 보상', label: '보상 이름1', def: '방울토마토' },
-  { key: 'reward.item2', group: '작물 보상', label: '보상 이름2', def: '스위트 바질' },
-  { key: 'reward.item3', group: '작물 보상', label: '보상 이름3', def: '밀랍랩' },
-  { key: 'reward.item4', group: '작물 보상', label: '보상 이름4', def: '커피박 퇴비' },
-
   // G.P.S 소개
   { key: 'gps.badge', group: 'G.P.S 소개', label: '배지', def: '전남대학교 환경에너지공학과 환경봉사 동아리' },
   { key: 'gps.title', group: 'G.P.S 소개', label: '헤드라인', def: '그린마일 팜을 만든 사람들,\nG.P.S 입니다', multiline: true },

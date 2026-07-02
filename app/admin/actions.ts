@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { EMISSION_COLUMN, type TransportKey } from '@/lib/transport'
 
 // 현재 로그인 사용자가 관리자인지 확인
 export async function checkAdmin() {
@@ -12,25 +13,59 @@ export async function checkAdmin() {
   return data?.is_admin === true
 }
 
-// 인증 승인/반려 — 처리 시각·반려 사유 기록
+// 인증 승인/반려 — 처리 시각·반려 사유 기록.
+// 승인 시 distanceEdit를 넘기면 이동거리를 수정하고 CO₂를 재계산해 반영(원래값·사유·수정자·시각 기록).
 export async function reviewCert(
   id: string,
   status: 'approved' | 'rejected',
-  reason?: string
+  reason?: string,
+  distanceEdit?: { newKm: number; reason: string }
 ): Promise<{ error: string } | { ok: true }> {
   if (!(await checkAdmin())) return { error: '권한이 없습니다.' }
   if (!id || !['approved', 'rejected'].includes(status)) return { error: '잘못된 요청입니다.' }
   if (status === 'rejected' && !reason?.trim()) return { error: '반려 사유를 입력해주세요.' }
 
   const supabase = createClient()
-  const { error } = await supabase
-    .from('certifications')
-    .update({
-      status,
-      processed_at: new Date().toISOString(),
-      reject_reason: status === 'rejected' ? reason!.trim() : null,
-    })
-    .eq('id', id)
+
+  const update: Record<string, unknown> = {
+    status,
+    processed_at: new Date().toISOString(),
+    reject_reason: status === 'rejected' ? reason!.trim() : null,
+  }
+
+  // 승인 + 이동거리 수정
+  if (status === 'approved' && distanceEdit) {
+    const newKm = Number(distanceEdit.newKm)
+    if (!newKm || newKm <= 0) return { error: '수정 거리는 0보다 큰 숫자여야 합니다.' }
+    if (newKm > 200) return { error: '수정 거리가 너무 큽니다(200km 초과).' }
+    if (!distanceEdit.reason?.trim()) return { error: '거리 수정 사유를 입력해주세요.' }
+
+    const { data: cert } = await supabase
+      .from('certifications')
+      .select('transport, distance_km, original_distance_km')
+      .eq('id', id)
+      .single()
+    if (!cert) return { error: '인증을 찾을 수 없습니다.' }
+
+    const { data: settings } = await supabase.from('settings').select('*').eq('id', 1).single()
+    if (!settings) return { error: '설정값을 불러오지 못했습니다.' }
+
+    const car = Number(settings.car_emission)
+    const mode = Number(settings[EMISSION_COLUMN[cert.transport as TransportKey]])
+    // 감축량(g) = (승용차 배출 - 선택 수단 배출) × 거리 (등록 때와 동일 공식)
+    const reducedG = Math.max(0, Math.round((car - mode) * newKm * 100) / 100)
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    update.original_distance_km = cert.original_distance_km ?? cert.distance_km
+    update.distance_km = newKm
+    update.co2_reduced_g = reducedG
+    update.distance_edit_reason = distanceEdit.reason.trim()
+    update.distance_edited_by = user?.id ?? null
+    update.distance_edited_at = new Date().toISOString()
+  }
+
+  const { error } = await supabase.from('certifications').update(update).eq('id', id)
 
   if (error) return { error: '처리 실패: ' + error.message }
   revalidatePath('/admin/certifications')
