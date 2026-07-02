@@ -125,7 +125,7 @@ export default async function Home() {
             <span className="text-[11px] font-bold tracking-[2px] text-gm-leaf">{T['guide.label']}</span>
             <h2 className="mt-2.5 text-[22px] font-bold tracking-tight text-gm-ink">{T['guide.title']}</h2>
           </div>
-          <CertifyTutorial texts={T} />
+          <CertifyTutorial texts={T} examples={[T['guide.img_map'], T['guide.img_place']]} />
         </div>
       </section>
 

@@ -83,11 +83,20 @@ export const SITE_TEXT_FIELDS: SiteTextField[] = [
   { key: 'footer.text', group: 'CTA · 푸터', label: '푸터', def: '🌿 그린마일 팜 · G.P.S' },
 ]
 
+// 메인페이지 고정 섹션의 편집 가능한 이미지 필드 (URL을 site_texts에 저장)
+export type SiteImageField = { key: string; group: string; label: string }
+
+export const SITE_IMAGE_FIELDS: SiteImageField[] = [
+  { key: 'guide.img_map', group: '이동 인증 가이드', label: '지도 스크린샷 예시 (STEP 2·3에 표시)' },
+  { key: 'guide.img_place', group: '이동 인증 가이드', label: '실제 공간 사진 예시 (STEP 3에 표시)' },
+]
+
 export type SiteTexts = Record<string, string>
 
 export function resolveSiteTexts(rows: { key: string; value: string }[] | null): SiteTexts {
   const db = new Map((rows ?? []).map((r) => [r.key, r.value]))
   const out: SiteTexts = {}
   for (const f of SITE_TEXT_FIELDS) out[f.key] = db.get(f.key) ?? f.def
+  for (const f of SITE_IMAGE_FIELDS) out[f.key] = db.get(f.key) ?? ''
   return out
 }

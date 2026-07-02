@@ -67,7 +67,7 @@ function SectionRow({
   isLast: boolean
   onStructureChange: () => void
 }) {
-  const [emoji, setEmoji] = useState(section.emoji)
+  const [emoji] = useState(section.emoji)
   const [title, setTitle] = useState(section.title)
   const [body, setBody] = useState(section.body)
   const [visible, setVisible] = useState(section.visible)
@@ -138,13 +138,6 @@ function SectionRow({
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-center gap-2">
-        <input
-          aria-label="아이콘"
-          className={`${input} w-14 text-center text-lg`}
-          value={emoji}
-          maxLength={4}
-          onChange={(e) => setEmoji(e.target.value)}
-        />
         <input
           aria-label="제목"
           className={`${input} min-w-0 flex-1 font-semibold`}
