@@ -20,7 +20,7 @@ export default function AppGuide() {
       <p className="text-xs font-bold text-gm-ink2">How to use</p>
       <h2 className="mt-1 text-xl font-extrabold leading-snug tracking-tight text-gm-ink">
         그린마일 팜을 <span className="rounded-md bg-[#cdeccb] px-1.5 py-0.5 text-gm-green">앱처럼</span>
-        <br />홈 화면에서 바로 열기
+        <br />홈 화면에서 바로 열기 for iOS
       </h2>
       <p className="mt-2 text-xs leading-relaxed text-gm-muted">
         설치 없이 4단계면 끝. 브라우저에서 홈 화면에 추가하면 아이콘이 생겨 앱처럼 실행돼요.{' '}
