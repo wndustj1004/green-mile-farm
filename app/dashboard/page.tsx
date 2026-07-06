@@ -6,6 +6,7 @@ import { TRANSPORTS, TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
 import StageSlider from './StageSlider'
 import WeeklyRanking, { type RankItem } from '@/components/WeeklyRanking'
 import AppGuide from '@/components/AppGuide'
+import AndroidAppGuide from '@/components/AndroidAppGuide'
 import Reveal from '@/components/Reveal'
 import NameEditor from './NameEditor'
 import { logoutAction } from './actions'
@@ -221,6 +222,9 @@ export default async function DashboardPage() {
         {/* 앱처럼 사용하기 (홈 화면에 추가 가이드) */}
         <Reveal>
           <AppGuide />
+        </Reveal>
+        <Reveal>
+          <AndroidAppGuide />
         </Reveal>
       </div>
     </main>
