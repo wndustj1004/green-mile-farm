@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { compressImage } from '@/lib/img'
 import { SITE_IMAGE_FIELDS } from '@/lib/siteText'
 import { updateSiteTexts } from '../actions'
 
@@ -18,9 +19,13 @@ export default function SiteImageEditor({ initial }: { initial: Record<string, s
     if (!file.type.startsWith('image/')) return setMsg('❌ 이미지 파일만 올릴 수 있어요.')
     if (file.size > 8 * 1024 * 1024) return setMsg('❌ 사진 용량은 8MB 이하여야 해요.')
     setBusyKey(key)
-    const ext = file.name.split('.').pop() || 'jpg'
+    const uploadFile = await compressImage(file)
+    const ext = uploadFile.name.split('.').pop() || 'jpg'
     const path = `guide/${key.replace(/[^a-zA-Z0-9]+/g, '_')}_${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from('landing-images').upload(path, file)
+    // 파일명이 매번 유니크 → 내용 불변이므로 길게(1년) 캐시. 재열람 시 전송량 절감.
+    const { error } = await supabase.storage
+      .from('landing-images')
+      .upload(path, uploadFile, { cacheControl: '31536000' })
     if (error) {
       setBusyKey('')
       return setMsg('❌ 업로드 실패: ' + error.message)

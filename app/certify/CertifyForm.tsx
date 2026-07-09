@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import exifr from 'exifr'
 import { createClient } from '@/lib/supabase/client'
+import { compressImage } from '@/lib/img'
 import { type TransportKey } from '@/lib/transport'
 import { submitCertification, type CertifyResult } from './actions'
 import LegBlock, { type Leg, emptyLeg, PHOTO_SLOTS } from './LegBlock'
@@ -70,9 +71,14 @@ export default function CertifyForm({ userId }: { userId: string }) {
           } catch {
             exif[slot.key] = null
           }
-          const ext = file.name.split('.').pop() || 'jpg'
+          // EXIF 추출(위)은 원본 기준. 업로드는 리사이즈·압축본(방향 보존, 실패 시 원본).
+          const uploadFile = await compressImage(file)
+          const ext = uploadFile.name.split('.').pop() || 'jpg'
           const path = `${userId}/${Date.now()}_leg${i}_${slot.key}.${ext}`
-          const { error: upErr } = await supabase.storage.from('certification-photos').upload(path, file)
+          // 파일명이 매번 유니크 → 내용 불변이므로 길게(1년) 캐시. 재열람 시 전송량 절감.
+          const { error: upErr } = await supabase.storage
+            .from('certification-photos')
+            .upload(path, uploadFile, { cacheControl: '31536000' })
           if (upErr) throw new Error('사진 업로드 실패: ' + upErr.message)
           photos[slot.key] = path
         }

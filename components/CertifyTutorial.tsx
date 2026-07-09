@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { supaImg } from '@/lib/img'
 
 // 이동 인증 방법 좌우 슬라이더 튜토리얼
 // examples[0] = 지도 스크린샷 예시, examples[1] = 실제 공간 사진 예시 (관리자 업로드 시 표시)
@@ -106,7 +107,7 @@ function ExampleFrame({ url, label, small }: { url?: string; label: string; smal
     >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={label} className="h-full w-full object-contain" />
+        <img src={supaImg(url, { width: 480 })} alt={label} className="h-full w-full object-contain" />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center text-center text-[11px] text-gm-muted2">
           <span className="mb-1 text-lg">🖼️</span>
