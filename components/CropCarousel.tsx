@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { supaImg } from '@/lib/img'
 
 // G.P.S 작물 키우기 사진 좌우 슬라이드 (관리자가 업로드한 이미지 사용)
 export default function CropCarousel({ images }: { images: string[] }) {
@@ -19,7 +20,7 @@ export default function CropCarousel({ images }: { images: string[] }) {
     <div className="mt-5">
       <div className="relative overflow-hidden rounded-2xl border border-gm-line bg-black/5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={images[i]} alt={`작물 사진 ${i + 1}`} className="h-64 w-full object-cover" />
+        <img src={supaImg(images[i], { width: 800, height: 512, resize: 'cover' })} alt={`작물 사진 ${i + 1}`} className="h-64 w-full object-cover" />
         {n > 1 && (
           <>
             <button

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { compressImage } from '@/lib/img'
 import {
   createSection,
   updateSection,
@@ -85,9 +86,13 @@ function SectionRow({
     if (!file.type.startsWith('image/')) return setMsg('❌ 이미지 파일만 첨부할 수 있어요.')
     if (file.size > 8 * 1024 * 1024) return setMsg('❌ 사진 용량은 8MB 이하여야 해요.')
     setUploading(true)
-    const ext = file.name.split('.').pop() || 'jpg'
+    const uploadFile = await compressImage(file)
+    const ext = uploadFile.name.split('.').pop() || 'jpg'
     const path = `${section.id}/${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from('landing-images').upload(path, file)
+    // 파일명이 매번 유니크 → 내용 불변이므로 길게(1년) 캐시. 재열람 시 전송량 절감.
+    const { error } = await supabase.storage
+      .from('landing-images')
+      .upload(path, uploadFile, { cacheControl: '31536000' })
     if (error) {
       setUploading(false)
       return setMsg('❌ 업로드 실패: ' + error.message)

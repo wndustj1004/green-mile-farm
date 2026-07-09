@@ -4,6 +4,7 @@ import TransportSection from './TransportSection'
 import ProjectSection from './ProjectSection'
 import EmissionDataSection from './EmissionDataSection'
 import Reveal from './Reveal'
+import { supaImg } from '@/lib/img'
 
 // 메인페이지 아래로 스크롤하면 보이는 소개 섹션들.
 // 텍스트(제목·본문)는 관리자 페이지(/admin/content)에서 수정 → DB에서 읽어옴.
@@ -69,7 +70,7 @@ function SectionImages({ images }: { images: string[] }) {
     <div className={`mt-5 grid gap-2.5 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
       {images.map((url, i) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={i} src={url} alt="" className="h-44 w-full rounded-2xl border border-gm-line object-cover" />
+        <img key={i} src={supaImg(url, { width: 700, height: 352, resize: 'cover' })} alt="" className="h-44 w-full rounded-2xl border border-gm-line object-cover" />
       ))}
     </div>
   )

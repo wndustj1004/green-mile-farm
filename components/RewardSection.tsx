@@ -1,5 +1,7 @@
 // 작물 보상 + 작물관리팀 케어로그 섹션 (제공된 디자인 반영, 정적 렌더)
 // REAL FARM(재배 현장) 텍스트·사진은 관리자 편집 텍스트/이미지 사용.
+import { supaImg } from '@/lib/img'
+
 export default function RewardSection({ texts }: { texts: Record<string, string> }) {
   return (
     <section className="scroll-mt-20 bg-[#f4f2ec] px-6 py-16 sm:py-20">
@@ -144,7 +146,7 @@ function Photo({ url, e, cap }: { url?: string; e: string; cap: string }) {
     <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" className="h-full w-full object-cover" />
+        <img src={supaImg(url, { width: 700, height: 525, resize: 'cover' })} alt="" className="h-full w-full object-cover" />
       ) : (
         <div
           className="flex h-full w-full flex-col items-center justify-center gap-3 p-5 text-center text-[15px] font-bold text-[#1e8a4c]"
