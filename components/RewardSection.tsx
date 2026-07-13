@@ -1,50 +1,15 @@
 // 작물 보상 + 작물관리팀 케어로그 섹션 (제공된 디자인 반영, 정적 렌더)
 // REAL FARM(재배 현장) 텍스트·사진은 관리자 편집 텍스트/이미지 사용.
 import { supaImg } from '@/lib/img'
+import RewardShowcase from './RewardShowcase'
 
 export default function RewardSection({ texts }: { texts: Record<string, string> }) {
   return (
     <section className="scroll-mt-20 bg-[#f4f2ec] px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-[1180px]">
+        <RewardShowcase />
+      </div>
       <div className="mx-auto max-w-3xl">
-        <span className="inline-flex items-center gap-2 rounded-full bg-[#efeafd] px-3.5 py-2 text-[12px] font-bold tracking-[0.16em] text-[#6c4ce0]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#6c4ce0] ring-4 ring-[#6c4ce0]/15" />
-          REWARD
-        </span>
-        <h2 className="mt-6 text-[32px] font-extrabold leading-[1.1] tracking-tight text-[#1a1b23] sm:text-[44px]">
-          화면 속 텃밭이,
-          <br />
-          <span className="text-[#6c4ce0]">진짜 수확</span>이 됩니다
-        </h2>
-        <p className="mt-5 max-w-[50ch] text-[16px] leading-[1.65] text-[#5b5e6b] sm:text-[18px]">
-          그린마일 팜의 보상은 그림이 아닙니다. G.P.S 임원진이 커피박 퇴비로 직접 키운 <b className="font-bold text-[#1a1b23]">살아있는 작물</b>이
-          당신에게 도착합니다.
-        </p>
-
-        {/* Reward card */}
-        <div
-          className="mt-12 overflow-hidden rounded-[32px] p-9 text-white sm:p-14"
-          style={{ background: 'linear-gradient(135deg,#5A3AD6 0%,#6C4CE0 50%,#8B5CF6 100%)' }}
-        >
-          <span className="inline-block rounded-full border border-white/25 bg-white/15 px-4 py-2 text-[12.5px] font-extrabold tracking-[0.2em]">
-            REWARD
-          </span>
-          <h3 className="mt-5 text-[26px] font-extrabold leading-tight tracking-tight sm:text-[40px]">
-            목표 5kg 달성 시,
-            <br />
-            진짜 작물을 받아요! 🎁
-          </h3>
-          <p className="mt-4 max-w-[52ch] text-[15px] leading-[1.7] text-white/85 sm:text-[17px]">
-            커피박(커피 찌꺼기) 퇴비로 기른 <b className="font-bold text-white">방울토마토와 스위트 바질</b>을 비닐 대신 여러 번 재사용
-            가능한 <b className="font-bold text-white">밀랍랩</b>에 포장해 배송해 드립니다.
-          </p>
-          <div className="mt-10 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-            <RewardItem e="🍅" t="방울토마토" s="직접 재배한 열매" />
-            <RewardItem e="🌿" t="스위트 바질" s="향긋한 허브" />
-            <RewardItem e="🐝" t="밀랍랩" s="재사용 친환경 포장" />
-            <RewardItem e="☕" t="커피박 퇴비" s="카페 폐기물의 순환" />
-          </div>
-        </div>
-
         {/* Real farm (관리자 편집) */}
         <div className="mt-20 text-center">
           <span className="inline-block rounded-full bg-[#e8f4ec] px-3.5 py-2 text-[12.5px] font-bold tracking-[0.14em] text-[#1e8a4c]">
@@ -128,16 +93,6 @@ export default function RewardSection({ texts }: { texts: Record<string, string>
         </div>
       </div>
     </section>
-  )
-}
-
-function RewardItem({ e, t, s }: { e: string; t: string; s: string }) {
-  return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 px-3 py-6 text-center">
-      <span className="block text-[34px]">{e}</span>
-      <span className="mt-3 block text-[15px] font-bold">{t}</span>
-      <span className="mt-1 block text-[12px] text-white/70">{s}</span>
-    </div>
   )
 }
 
