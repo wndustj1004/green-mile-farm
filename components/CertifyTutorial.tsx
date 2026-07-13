@@ -101,13 +101,17 @@ export default function CertifyTutorial({
 function ExampleFrame({ url, label, small }: { url?: string; label: string; small?: boolean }) {
   return (
     <div
-      className={`mx-auto mt-3 aspect-[3/4] w-full overflow-hidden rounded-xl border border-gm-line bg-gm-cream2 ${
+      className={`mx-auto mt-3 aspect-[4/5] w-full overflow-hidden rounded-xl border border-gm-line bg-gm-cream2 ${
         small ? '' : 'max-w-[240px]'
       }`}
     >
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={supaImg(url, { width: 480 })} alt={label} className="h-full w-full object-contain" />
+        <img
+          src={supaImg(url, { width: 480, height: 600, resize: 'cover' })}
+          alt={label}
+          className="h-full w-full object-cover"
+        />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center text-center text-[11px] text-gm-muted2">
           <span className="mb-1 text-lg">🖼️</span>
