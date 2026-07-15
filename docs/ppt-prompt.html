@@ -1,0 +1,157 @@
+<title>그린마일 팜 발표 PPT 생성 프롬프트</title>
+<style>
+  :root{
+    --green:#2f5d3c; --leaf:#4b8b5b; --cream:#f7f4ec; --sage:#e7ecdf;
+    --ink:#20281f; --line:#d9e0cf; --tomato:#e2563f; --paper:#fffdf8;
+    --muted:#5a6555;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cream);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:32px 20px 80px}
+  header.hero{background:linear-gradient(135deg,var(--green),var(--leaf));
+    color:#fff;border-radius:20px;padding:34px 30px;box-shadow:0 10px 30px rgba(47,93,60,.25)}
+  header.hero .kicker{font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    opacity:.85;font-weight:700;margin:0 0 10px}
+  header.hero h1{margin:0 0 10px;font-size:28px;line-height:1.3}
+  header.hero p{margin:0;opacity:.94;font-size:15px}
+  .tomato{color:var(--tomato)}
+  .howto{background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    padding:22px 24px;margin:22px 0}
+  .howto h2{margin:0 0 12px;font-size:17px;color:var(--green)}
+  .howto ol{margin:0;padding-left:20px}
+  .howto li{margin:6px 0}
+  .howto code{background:var(--sage);padding:1px 6px;border-radius:5px;font-size:13px}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+    margin:26px 0 10px;flex-wrap:wrap}
+  .bar h2{margin:0;font-size:18px;color:var(--green)}
+  button.copy{background:var(--green);color:#fff;border:0;border-radius:10px;
+    padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 12px rgba(47,93,60,.25);transition:transform .08s,background .2s}
+  button.copy:hover{background:var(--leaf)}
+  button.copy:active{transform:translateY(1px)}
+  button.copy.done{background:var(--tomato)}
+  .promptbox{position:relative;background:#1f2a20;border-radius:16px;overflow:auto;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  pre#prompt{margin:0;padding:26px 26px 30px;color:#eef2e8;font-size:13.5px;line-height:1.72;
+    white-space:pre-wrap;word-break:break-word;
+    font-family:"SF Mono",ui-monospace,Consolas,"D2Coding","Malgun Gothic",monospace}
+  .note{font-size:13px;color:var(--muted);margin-top:14px}
+  .tip{border-left:4px solid var(--tomato);background:var(--paper);
+    border-radius:0 12px 12px 0;padding:14px 18px;margin:20px 0;font-size:14px}
+  @media (prefers-color-scheme:dark){
+    body{background:#141a13;color:#e8ede2}
+    .howto,.tip{background:#1c241a;border-color:#2c3626}
+    .howto code{background:#2c3626;color:#dfe7d5}
+    .note{color:#a9b6a0}
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">Claude 발표자료 생성 프롬프트</p>
+    <h1>그린마일 팜 — 사업 &amp; 웹사이트 구현 <span class="tomato">안내 발표 PPT</span></h1>
+    <p>외부 담당자 미팅용 · 아래 프롬프트를 복사해 Claude에 붙여넣으면 발표용 HTML 슬라이드가 만들어집니다.</p>
+  </header>
+
+  <div class="howto">
+    <h2>사용 방법</h2>
+    <ol>
+      <li>오른쪽 아래 <b>「프롬프트 복사」</b> 버튼을 눌러 전체를 복사합니다.</li>
+      <li>Claude(또는 Claude Code) 새 대화에 붙여넣고 전송합니다.</li>
+      <li>Claude가 만들어 준 <code>.html</code> 파일을 브라우저로 열고 <b>F11(전체화면)</b> + <b>좌우 화살표</b>로 발표합니다.</li>
+      <li>대괄호 <code>[ ... ]</code> 로 표시된 <b>날짜·숫자·발표자명</b>은 발표 전에 최신값으로 바꾸세요.</li>
+      <li>더 넣고 싶은 슬라이드가 있으면 프롬프트 맨 아래에 한 줄로 요청을 덧붙이면 됩니다.</li>
+    </ol>
+  </div>
+
+  <div class="tip">
+    💡 <b>팁</b> — 만든 뒤 “5번 슬라이드에 실제 화면 캡처 넣을 자리 표시해줘”, “발표 3분 분량 스크립트도 각 슬라이드 노트로 달아줘” 처럼 이어서 요청하면 완성도를 높일 수 있어요.
+  </div>
+
+  <div class="bar">
+    <h2>📋 복사할 프롬프트</h2>
+    <button class="copy" id="copyBtn" onclick="copyPrompt()">프롬프트 복사</button>
+  </div>
+
+  <div class="promptbox">
+<pre id="prompt">너는 발표자료를 잘 만드는 프레젠테이션 디자이너야.
+아래 정보를 바탕으로 "외부 담당자 미팅용 — 그린마일 팜 사업 및 웹사이트 구현 안내 발표자료"를 만들어줘.
+
+■ 산출물 형식 (반드시 지킬 것)
+- 단일 HTML 파일 하나로만 반환. 외부 라이브러리·폰트·이미지 링크 없이 self-contained(인터넷 없이 열려도 그대로 보여야 함).
+- 16:9 슬라이드 데크. 슬라이드 한 장 = 화면 하나. 좌우 화살표 키와 화면 클릭으로 넘기고, 우하단에 "현재/전체" 페이지 번호 표시.
+- 발표장 빔프로젝터 전체화면(F11) 기준으로 레이아웃이 깨지지 않게. 폰트·여백은 화면 크기에 비례하게(vw/vh, clamp 사용).
+- 인쇄(브라우저 PDF 저장) 시 슬라이드가 한 장씩 끊겨 나오도록 print CSS도 넣어줘.
+
+■ 청중과 톤
+- 청중: 사업 외부 담당자(지자체·공모사업 담당자, 협력기관 등). 개발자가 아님.
+- 전문용어는 풀어서, "무슨 사업인지 / 어떻게 작동하는지 / 무엇을 만들었는지"가 한눈에 들어오게. 전부 한국어.
+- 슬라이드 1장에 핵심 메시지 1개. 글자 수는 적게, 큰 타이포로.
+
+■ 디자인
+- 친환경·자연 톤. 메인 딥그린 #2f5d3c, 보조 크림 #f7f4ec, 잎사귀그린 #4b8b5b·세이지 #e7ecdf, 포인트 토마토레드 #e2563f.
+- 방울토마토·이동(걷기/자전거)·성장·CO₂ 감소를 상징하는 간단한 아이콘/일러스트는 인라인 SVG로 직접 그려서 사용(외부 이미지 금지).
+- 여백 넉넉하게, 카드·타임라인·단계 다이어그램 등으로 시각화. 표지·간지에는 은은한 그라데이션 배경.
+
+■ 사업 팩트 (이 값으로 채우고, 대괄호는 발표 전 최신값으로 교체)
+- 서비스명: 그린마일 팜 (Green Mile Farm)
+- 운영 주체: G.P.S (환경 동아리), 광주
+- 한 줄 정의: "광주 시민참여형 친환경 이동 챌린지 — 친환경 이동을 인증하면 CO₂ 감축량이 쌓이고, 화면 속 가상 방울토마토가 자라며, 목표 달성 시 G.P.S가 실제로 키운 작물을 보상으로 받는 서비스."
+- 참여 이동수단 4가지: 걷기 · 자전거 · 버스 · 지하철
+- 목표 감축량: 5kg CO₂ / 참여 규모: 약 [15]명
+- 챌린지 기간: [2026-07-06] ~ [2026-08-02]
+- 라이브 사이트: https://green-mile-farm.vercel.app
+- 발표일: [2026-__-__] / 발표자: [주연서, G.P.S]
+
+■ 웹사이트 구현 팩트 (비개발자도 이해되게 쉬운 말로 표현)
+- 기술 스택: Next.js 14(웹 프레임워크) + TypeScript + Tailwind CSS / Supabase(회원 로그인·데이터베이스·사진 저장소·보안규칙) / Vercel(자동 배포·호스팅) / 카카오 지도 API.
+- 이동 인증 방식: 한 번에 여러 이동 구간을 등록. 구간 1개 = 교통수단 + 출발/도착 지도 핀 + 사진 4장(현장 2장·지도 스크린샷 2장).
+- 거리 계산: 지도 핀 좌표 기반으로 서버가 자동 계산(보행 경로 보정 ×1.3, 방향 무관). 이용자가 숫자를 임의로 못 바꿈 → 신뢰성 확보.
+- 사진 검증: 업로드 시 EXIF(촬영시각·GPS) 자동 추출·저장 → 운영진 사후 검토 참고자료.
+- 게이미피케이션: 감축량에 따라 가상 방울토마토가 단계별로 성장. 주간 랭킹은 매주 월요일 리셋(상위 3명 보너스).
+- 관리자 페이지(/admin): 참여자·총감축량 통계 대시보드, 이동 인증 심사(승인/반려, 승인 시 거리 수정하면 CO₂ 자동 재계산), 참가자 명부 CSV 다운로드, 목표·기간·배출계수 설정, 랜딩 콘텐츠 편집.
+
+■ 슬라이드 구성 (총 14장 내외)
+1. 표지 — 서비스명 + 한 줄 정의 + 운영주체 G.P.S + 발표일/발표자.
+2. 한 문장 요약 — 이 사업이 무엇인지 큰 글씨 한 문장으로.
+3. 배경·문제의식 — 광주 교통 부문 온실가스, 시민의 자발적 참여를 이끌 장치가 필요하다는 문제 제기.
+4. 운영 주체 & 사업 맥락 — G.P.S(환경 동아리) 소개와 이 서비스를 만든 목적.
+5. 서비스 흐름 한눈에 — 4단계 다이어그램: ①친환경 이동 인증 → ②CO₂ 감축량 적립 → ③가상 방울토마토 성장 → ④실물 작물 보상.
+6. 참여자 여정 — 회원가입 → 이동 인증 → 성장 확인 → 목표 달성·보상 수령의 사용자 경험 흐름.
+7. 핵심① 이동 인증이 작동하는 법 — 교통 4수단, 지도 핀으로 출발/도착 지정, 사진 4장 업로드.
+8. 핵심② 신뢰성 설계 — 서버 거리계산(조작 불가), 지도 핀 좌표 스냅, EXIF 사후 검토. "왜 믿을 수 있는가".
+9. 핵심③ 재미 요소 — 가상 방울토마토 성장 단계 + 주간 랭킹으로 지속 참여 유도.
+10. 웹사이트 구현 — 기술 스택과 구조를 비개발자용으로 쉽게(무엇을 무엇으로 만들었는지 아이콘 카드).
+11. 주요 화면 소개 — 메인페이지 / 참여자 대시보드 / 이동 인증 / 관리자 페이지 (각 화면 역할 한 줄 + 캡처 넣을 자리 표시).
+12. 운영·관리자 기능 — 인증 심사, 통계, 설정, 명부 CSV 등 운영이 어떻게 돌아가는지.
+13. 현황 & 기대효과 — 참여 규모·목표 감축량·기간 지표 + 사업 확장 가능성.
+14. 마무리 — 라이브 URL, 함께 만들 점(협력 제안), Q&A, 연락처.
+
+각 슬라이드에는 캡처 이미지가 들어갈 자리를 점선 박스 + "화면 캡처 위치" 안내 문구로 표시해줘(나중에 내가 실제 스크린샷을 넣을 예정).
+완성 후, 슬라이드 수와 조작법(화살표/전체화면/PDF 저장)을 한 줄로 알려줘.</pre>
+  </div>
+
+  <p class="note">이 파일 자체는 “프롬프트”입니다 — 여기서 바로 슬라이드가 만들어지는 게 아니라, 위 내용을 복사해 Claude에 붙여넣으면 발표용 HTML 슬라이드 데크가 생성됩니다.</p>
+
+</div>
+
+<script>
+  function copyPrompt(){
+    var text = document.getElementById('prompt').innerText;
+    var btn = document.getElementById('copyBtn');
+    function done(){ btn.textContent='복사됨 ✓'; btn.classList.add('done');
+      setTimeout(function(){ btn.textContent='프롬프트 복사'; btn.classList.remove('done'); },1800); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else { fallback(); }
+    function fallback(){
+      var ta=document.createElement('textarea'); ta.value=text;
+      ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+      ta.select(); try{document.execCommand('copy'); done();}catch(e){ alert('복사가 안 됩니다. 프롬프트 영역을 직접 드래그해 복사해주세요.'); }
+      document.body.removeChild(ta);
+    }
+  }
+</script>
