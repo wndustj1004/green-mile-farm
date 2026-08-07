@@ -7,6 +7,7 @@ const NAV = [
   { href: '/admin/certifications', label: '인증 내역' },
   { href: '/admin/participants', label: '참가자 명부' },
   { href: '/admin/content', label: '랜딩 내용' },
+  { href: '/admin/health', label: '상태 점검' },
   { href: '/admin/settings', label: '설정' },
 ]
 
