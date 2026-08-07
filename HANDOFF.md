@@ -25,7 +25,7 @@
 | `main` 최신 커밋 | `9bba299` REWARD 섹션 리뉴얼 — 토마토 바질 청 |
 | GitHub | https://github.com/wndustj1004/green-mile-farm |
 | 라이브 | https://green-mile-farm.vercel.app |
-| Supabase 마이그레이션 | `02`~`10` **전부 DB 적용 완료** (새 SQL 파일 없음) |
+| Supabase 마이그레이션 | `02`~`10` **DB 적용 완료** / `11_restore_landing_sections.sql`은 **필요 시 실행하는 복구용**(상시 실행 불필요) |
 | 챌린지 기간 | `2026-07-06 ~ **2026-08-20**` (08-02에서 **연장됨**) |
 
 - 챌린지 기간의 **정답은 DB `settings.challenge_end`**(관리자 `/admin/settings`에서 수정).
@@ -67,7 +67,13 @@
 | 4 | 작물 사진 캐러셀 | `CropCarousel` |
 | 그 외 | Story 폴백 | — |
 
-> ⚠️ index 고정 매핑이라 **admin에서 섹션 순서를 바꾸면 화면이 깨질 수 있음**.
+> ⚠️ **index 고정 매핑이라 admin에서 섹션을 삭제하거나 순서를 바꾸면 화면이 깨진다.**
+> - index 0~3은 **디자인이 코드에 고정**되어 있어 행의 제목·본문이 화면에 안 나옴 → **자리표 역할**(0의 문구는 `site_texts`의 `gps.*`에서 옴).
+> - 특히 **index 3은 화면에 아무것도 안 그리지만 반드시 존재해야 함**(없으면 index 4 캐러셀이 위로 밀림).
+> - 실제 행 내용(제목·본문·사진)을 쓰는 건 **index 4 캐러셀뿐**.
+> - 조회 조건은 `visible=true` + `sort_order` 오름차순(`app/page.tsx`) → **숨김 처리해도 순서가 밀린다**.
+> - 실수로 지웠을 때 복구: **`supabase/11_restore_landing_sections.sql`** 을 SQL Editor에서 실행
+>   (5행을 올바른 순서로 재생성, 캐러셀 사진 목록은 자동 보존. 사진 파일은 삭제해도 `landing-images` 버킷에 남아 있음).
 
 ### 5-2. 관리자 랜딩 편집 `app/admin/content/`
 | 파일 | 편집 대상 |
