@@ -1,4 +1,4 @@
-# 그린마일 팜 — 새 세션 인수인계 (2026-07-01 갱신)
+# 그린마일 팜 — 새 세션 인수인계 (2026-08-07 갱신)
 
 > 컨텍스트가 길어져 **새 대화창으로 이어가기 위한 문서**입니다.
 > 새 세션 시작 시 이 파일을 먼저 읽어달라고 요청하세요. (예: "HANDOFF.md 읽고 이어서 작업해줘")
@@ -14,21 +14,29 @@
 - **한국어**, **표/번호 단계**로 설명. 프로그래밍·디자인 초보 → 전문용어는 풀어서.
 - **확정 vs 불확실**을 명확히 구분.
 - **배포는 사용자가 "배포해/배포해도 돼"라고 할 때만.** 그 전엔 로컬 빌드까지만 하고 대기.
+- ★ **기능을 수정해 재배포할 때는 반드시 이 HANDOFF.md도 함께 갱신**한다 (2026-08-07 사용자 지시).
+  갱신 대상: 3번 현재 상태(커밋 해시), 4번 배포·인프라(환경변수·마이그레이션), 5번 아키텍처(새 기능).
 - **토큰 절약**: 같은 파일 반복 Read 금지, 전체 Write보다 Edit 우선, dev 서버 매 턴 재시작 금지.
 - 코드 변경 시 **기능 로직은 보존, 겉모습만** 바꾸는 게 기본 원칙.
 
 ## 3. 현재 상태 (★중요)
-- **운영 배포 완료.** `main` = `b95b98d` (origin/main과 동기화). 로컬=원격=운영 일치.
+- **운영 배포 완료.** `main` = `419de37` (origin/main과 동기화). 로컬=원격=운영 일치.
 - GitHub: https://github.com/wndustj1004/green-mile-farm (main)
 - 라이브: https://green-mile-farm.vercel.app
-- **Supabase 마이그레이션 02~10 전부 DB 적용 완료**(REST로 확인함). 아래 4번 참고.
+- **Supabase 마이그레이션 02~11 전부 DB 적용 완료**(REST로 확인함). 아래 4번 참고.
+- **관리자 상태 점검 시스템 가동 중** — `/admin/health`, 매일 KST 오후 8시대 자동. 아래 5번 참고.
+- **배출계수 현재값**(2026-08-07 기준): 승용차 211.1 / 걷기 0 / 자전거 0 / 버스 29.1 / **지하철 1.53**.
+  ※ 7/24에 지하철이 28.7로 잘못 들어가 버스와 거의 같아졌던 것을 8/7에 1.53으로 복원함.
+  과거 인증은 그 당시 계수 값을 유지(소급 재계산 안 함) — 점검 B6이 이를 "정상 이력"으로 표시.
 
 ## 4. 배포 절차 & 인프라
 1. 코드 수정 → `npx tsc --noEmit` + `npm run build` 통과 확인 (OneDrive `.next` EBUSY 나면 dev 끄고 `.next` 삭제 후 재시도).
 2. 사용자가 "배포해" 하면: `git add -A && git commit && git push origin main` → **Vercel 자동 배포**.
    - 커밋 메시지 끝에 `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
    - 자동배포 안 뜨면 **빈 커밋 push로 재트리거** (과거 웹훅 누락 사례 있었음).
-- **Vercel 환경변수**(Production·Preview·Development 등록됨): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_KAKAO_MAP_KEY`, `KAKAO_REST_API_KEY`. 비밀값은 `.env.local`(gitignore)에 있음.
+- **Vercel 환경변수**(Production·Preview·Development 등록됨): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_KAKAO_MAP_KEY`, `KAKAO_REST_API_KEY`, **`CRON_SECRET`**(상태 점검 API 보호, 2026-08-07 추가). 비밀값은 `.env.local`(gitignore)에 있음.
+- **Vercel Cron**(`vercel.json`): `/api/health`를 `0 11 * * *`(UTC) = **KST 오후 8시대** 하루 1회 실행.
+  Hobby 플랜 상한 = **하루 1회·시각 ±59분·실패 시 재시도 없음**(공식 문서 확인). Cron은 **운영(Production) 배포에서만** 동작.
 - **카카오 콘솔** Web 도메인: `localhost:3000`, `green-mile-farm.vercel.app` 등록됨. (Vercel **프리뷰 브랜치 URL**은 도메인 미등록 → 프리뷰에선 지도 안 뜸, 운영은 정상)
 - **SQL은 코드 배포와 별개**: 새 마이그레이션 파일 만들면 사용자가 Supabase SQL Editor에서 **직접 실행**해야 함. `supabase/NN_*.sql`. (02~10 이미 실행됨)
 
@@ -52,11 +60,26 @@
 ### 관리자 인증 심사 `app/admin/certifications/`
 `CertActions.tsx` — 승인(모달에서 **이동거리 수정** 가능, CO₂ 재계산·이력 기록) / 반려(사유 모달). 액션=`app/admin/actions.ts`의 `reviewCert`.
 
+### 관리자 상태 점검 `/admin/health` (2026-08-07 추가)
+서버·DB 안정성과 데이터 무결성을 자동 확인. **신호등 🟢정상/🟡주의/🔴위험 + 한국어 설명 + "무엇을 하면 되나요" 조치 안내**로 표시.
+- **점검 31항목** — `lib/health/infra.ts`(A1~A9: 연결·RPC 3종·Storage 2·Auth·환경변수·배포버전) /
+  `lib/health/integrity.ts`(B1~B14: 고아기록·사진4장·DB↔파일대조·이상값·과다거리·CO₂재계산·집계일관성·미검토방치·거리수정이력·설정유효성·고아파일·랜딩이미지·회원정보·일정) /
+  `lib/health/capacity.ts`(C1~C8: DB/Storage 용량·표별크기·증가속도예측·응답추세·사진평균용량·기록누적·전송량 안내).
+- **임계값은 `lib/health/types.ts`의 `TH` 상수 한 곳**에 모여 있음 — 기준 조정은 여기만 고치면 됨.
+- 실행 경로 2가지: ① Vercel Cron → `app/api/health/route.ts`(`CRON_SECRET` Bearer 헤더 검증) ② 관리자 버튼 → `app/admin/health/actions.ts`(is_admin 확인). 그 외 요청은 401.
+- 결과는 `health_logs` 표에 1행씩 기록(11번 SQL). 화면에서 최근 30회 이력 확인 가능.
+- ★ **읽기 전용 원칙**: 점검 로직은 데이터를 절대 수정·삭제하지 않음. **유일한 쓰기 = `health_logs` INSERT**(`lib/health/run.ts`).
+- **못 하는 것(확정)**: 월 전송량(Egress) 자동 측정 — Supabase 서버 통계라 앱에서 못 읽음(별도 관리 토큰 필요, 보안상 비권장). C8이 대시보드 링크로 안내만 함.
+- 배출계수 변경 유틸: `node --env-file=.env.local scripts/set-emission.mjs subway 1.53` (관리자 > 설정 화면으로도 가능).
+
 ### 서버 함수/RPC (전부 DB 적용됨)
 - `challenge_stats()`(05) — 공개 집계(참여자·총감축kg·수확자). 관리자 통계와 동일 공식.
 - `weekly_ranking()`(06) — 주간 상위6(월~현재 KST, 수확자 제외, 상위3 표시 ×1.5, 이름 마스킹+이메일아이디).
 - `effective_reduction_g(uid)`(07) — 완료된 주 상위3 +50% 보너스 포함 실효 감축량(대시보드 작물 성장에 반영).
 - 이름변경 컬럼(08 `profiles.name_changed_at`), 거리수정 컬럼(10 `certifications.original_distance_km`·`distance_edit_reason`·`distance_edited_by`·`distance_edited_at`).
+- **상태 점검(11)** — `health_logs` 표(RLS: 조회는 관리자만, 기록은 서비스 롤만) + 읽기 전용 함수 3개
+  `health_db_stats()`(DB·표별 용량) / `health_storage_stats()`(버킷별 파일수·용량) / `health_photo_audit()`(DB 사진경로 ↔ 실제 파일 양방향 대조).
+  세 함수는 `anon`·`authenticated` 실행 권한을 회수해 **서버(service_role)만 실행 가능**.
 
 ## 6. 디자인 규칙 · 워크플로
 - 색: `tailwind.config.ts`의 **`gm-*` 팔레트**(green #2f5d3c, leaf, cream, sage, fill, line, ink, tomato). 리치 섹션은 파일별 커스텀 hex 사용.
@@ -80,6 +103,12 @@
 - Vercel 자동배포 누락 → 빈 커밋 재트리거.
 - ESLint `no-img-element`/`no-explicit-any`는 필요 시 인라인 disable.
 - 미사용 함수/변수 남으면 정리(빌드 경고 방지).
+- 커밋 메시지 여러 줄 입력 시 **PowerShell here-string(`@'…'@`)을 Bash 도구에 쓰면 깨짐** → Bash에서는 heredoc(`git commit -F - <<'MSG'`) 사용.
+
+## 9-1. 상태 점검이 찾아낸 미해결 항목 (2026-08-07)
+- 🟡 **주인 없는 사진 파일 16개(약 13.3MB)** — 업로드는 됐지만 어떤 인증에도 연결 안 된 파일. 사이트 동작엔 무해, 용량만 차지.
+  **삭제는 되돌릴 수 없으므로 사용자 지시가 있을 때만** 진행할 것. 목록은 `/admin/health` B11 항목의 [자세히 보기]에서 확인.
+- 🟡 **CO₂ 재계산 불일치 15건** — 배출계수를 바꾸기 전에 등록된 인증들. **정상 이력이며 조치 불필요**(과거 기록 소급 수정 안 하는 것이 원칙).
 
 ## 10. 메모리
 새 세션은 `MEMORY.md`(user-profile / confirmed-decisions / tech-and-progress) 자동 로드. 이 HANDOFF는 "지금 당장 이어서 할 일"용 상세본.
