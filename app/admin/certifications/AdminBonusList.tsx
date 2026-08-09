@@ -155,11 +155,13 @@ export default function AdminBonusList({ awards }: { awards: AdminBonusAward[] }
           </b>
           <br />
           {n.note}
-          <br />
-          보너스는 인증 기록에서 자동 계산됩니다. 인증을 반려하거나 이동거리를 수정하면 해당 주의
-          보너스도 함께 다시 계산됩니다.
         </p>
       ))}
+
+      <p className="rounded-xl bg-white p-4 text-xs leading-relaxed text-gray-500 shadow-sm">
+        모든 보너스는 인증 기록에서 자동 계산됩니다. 인증을 반려하거나 이동거리를 수정하면 관련된
+        보너스도 함께 다시 계산되므로, 별도로 승인하거나 취소할 필요가 없습니다.
+      </p>
     </div>
   )
 }

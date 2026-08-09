@@ -23,8 +23,9 @@
 - **운영 배포 완료.** `main` = `8d55300` (origin/main과 동기화). 로컬=원격=운영 일치.
 - GitHub: https://github.com/wndustj1004/green-mile-farm (main)
 - 라이브: https://green-mile-farm.vercel.app
-- **Supabase 마이그레이션 02~12 전부 DB 적용 완료**(REST로 확인함). 아래 4번 참고.
-  (12는 2026-08-09 적용 — `scripts/check-bonus.mjs`로 검산 통과 확인함.)
+- **Supabase 마이그레이션 02~13 전부 DB 적용 완료**(REST로 확인함). 아래 4번 참고.
+  (12·13은 2026-08-09 적용 — `scripts/check-bonus.mjs` 13명 전원 ✅ 검산 통과.
+   13은 12의 `bonus_awards_all()`을 통째로 다시 정의함 → 12를 재실행할 필요 없음.)
 - **관리자 상태 점검 시스템 가동 중** — `/admin/health`, 매일 KST 오후 8시대 자동. 아래 5번 참고.
 - **배출계수 현재값**(2026-08-07 기준): 승용차 211.1 / 걷기 0 / 자전거 0 / 버스 29.1 / **지하철 1.53**.
   ※ 7/24에 지하철이 28.7로 잘못 들어가 버스와 거의 같아졌던 것을 8/7에 1.53으로 복원함.
@@ -39,7 +40,7 @@
 - **Vercel Cron**(`vercel.json`): `/api/health`를 `0 11 * * *`(UTC) = **KST 오후 8시대** 하루 1회 실행.
   Hobby 플랜 상한 = **하루 1회·시각 ±59분·실패 시 재시도 없음**(공식 문서 확인). Cron은 **운영(Production) 배포에서만** 동작.
 - **카카오 콘솔** Web 도메인: `localhost:3000`, `green-mile-farm.vercel.app` 등록됨. (Vercel **프리뷰 브랜치 URL**은 도메인 미등록 → 프리뷰에선 지도 안 뜸, 운영은 정상)
-- **SQL은 코드 배포와 별개**: 새 마이그레이션 파일 만들면 사용자가 Supabase SQL Editor에서 **직접 실행**해야 함. `supabase/NN_*.sql`. (02~12 이미 실행됨)
+- **SQL은 코드 배포와 별개**: 새 마이그레이션 파일 만들면 사용자가 Supabase SQL Editor에서 **직접 실행**해야 함. `supabase/NN_*.sql`. (02~13 이미 실행됨)
 
 ## 5. 아키텍처 · 주요 기능 (파일 위치)
 ### 메인페이지 `app/page.tsx` (섹션 순서)
@@ -70,7 +71,17 @@
 - 화면 ② 관리자 `/admin/certifications?status=bonus` — `AdminBonusList.tsx`. 요약3 + 참가자별 합계표 + 상세표(적립 날짜·대상 기간·참가자·이벤트·산정 근거·적립량·상태).
 - 화면 ③ 대시보드 — 누적 통계 아래 "🎁 보너스 +N kg 포함 · 내역 보기" 링크(`/my`).
 - 타입·표시 규칙은 **`lib/bonus.ts`** 한 곳(`BONUS_KIND` 맵). 검산 스크립트 `node --env-file=.env.local scripts/check-bonus.mjs`.
-- ★ **새 보너스 제도 추가 방법**: ① `bonus_awards_all()` 마지막 select에 `union all`로 새 블록 추가(`kind` 값만 새로 정함) ② `lib/bonus.ts`의 `BONUS_KIND`에 아이콘·라벨·설명 한 줄 추가. **화면 코드는 손댈 필요 없음.**
+- 날짜 표기는 `formatAwardedAt`이 **직접 조립**함(toLocaleString 금지) — 서버(Node)는 "AM", 브라우저는 "오전"으로 갈려서 관리자/사용자 화면 표기가 달라졌던 문제 때문.
+- ★ **새 보너스 제도 추가 방법**: ① `bonus_awards_all()` 마지막 select에 `union all`로 새 블록 추가(`kind` 값만 새로 정함) ② `lib/bonus.ts`의 `BONUS_KIND`에 아이콘·라벨·설명 한 줄 추가. **화면 코드는 손댈 필요 없음.** (13번이 실제 사례)
+
+#### 운영 중인 보너스 제도
+| kind | 이름 | 조건 | 지급 | 확정 시점 | SQL |
+|---|---|---|---|---|---|
+| `weekly_rank` | 주간 랭킹 보너스 🏆 | 한 주(월~일) 감축량 상위 3명. **수확 도달자 제외** | 그 주 감축량의 50% | 그 주가 끝난 월요일 0시(KST). 진행 중인 주는 `settled=false` "적립 예정" | 12 |
+| `steady3` | 우리 관계 steady♡ 💚 | **승인 인증 누적 3회** 달성 (1인 1회). 수확 도달자도 받음 | 1kg 정액 | 3번째 인증과 동시에 즉시 확정 | 13 |
+- `steady3` 기준값(3회·1000g)은 **13번 SQL의 `cfg` CTE 한 곳**에 모여 있음 — 바꾸려면 거기만 수정.
+- 두 제도 모두 **수확 도달자 판별(`totals`)에는 인증분만** 사용 → 보너스가 랭킹 자격에 되먹임되지 않음(순환 참조 방지). 이 원칙은 제도를 추가해도 유지할 것.
+- 2026-08-09 `steady3` 도입 시 소급 적용 영향: **7명 +7kg**, 이로 인해 새로 수확(5kg) 달성한 사람은 **없음**(최근접 김□□·최○○ 3.68→4.68kg).
 
 ### 관리자 상태 점검 `/admin/health` (2026-08-07 추가)
 서버·DB 안정성과 데이터 무결성을 자동 확인. **신호등 🟢정상/🟡주의/🔴위험 + 한국어 설명 + "무엇을 하면 되나요" 조치 안내**로 표시.
@@ -88,7 +99,7 @@
 - `challenge_stats()`(05) — 공개 집계(참여자·총감축kg·수확자). 관리자 통계와 동일 공식.
 - `weekly_ranking()`(06) — 주간 상위6(월~현재 KST, 수확자 제외, 상위3 표시 ×1.5, 이름 마스킹+이메일아이디).
 - `effective_reduction_g(uid)`(07 → **12에서 재정의**) — 완료된 주 상위3 +50% 보너스 포함 실효 감축량(대시보드 작물 성장에 반영).
-- **보너스 내역(12)** — `bonus_awards_all()`(내부) / `my_bonus_awards()` / `admin_bonus_awards()`. 위 "보너스 적립 내역" 참고.
+- **보너스 내역(12 → 13에서 `bonus_awards_all()` 재정의)** — `bonus_awards_all()`(내부) / `my_bonus_awards()` / `admin_bonus_awards()`. 위 "보너스 적립 내역" 참고.
 - 이름변경 컬럼(08 `profiles.name_changed_at`), 거리수정 컬럼(10 `certifications.original_distance_km`·`distance_edit_reason`·`distance_edited_by`·`distance_edited_at`).
 - **상태 점검(11)** — `health_logs` 표(RLS: 조회는 관리자만, 기록은 서비스 롤만) + 읽기 전용 함수 3개
   `health_db_stats()`(DB·표별 용량) / `health_storage_stats()`(버킷별 파일수·용량) / `health_photo_audit()`(DB 사진경로 ↔ 실제 파일 양방향 대조).

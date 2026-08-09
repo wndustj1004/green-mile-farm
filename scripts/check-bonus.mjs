@@ -20,8 +20,9 @@ const nameOf = new Map(profiles.map((p) => [p.id, `${p.name}(@${p.username})`]))
 
 const { data: certs } = await admin
   .from('certifications')
-  .select('user_id, co2_reduced_g, created_at')
+  .select('user_id, co2_reduced_g, created_at, id')
   .eq('status', 'approved')
+  .order('created_at', { ascending: true })
 
 // 한국시간 기준 그 주 월요일 (DB의 date_trunc('week', ... at time zone 'Asia/Seoul')와 동일)
 function weekStartKST(iso) {
@@ -63,6 +64,30 @@ for (const wk of [...weekly.keys()].sort()) {
     console.log(`   ${i + 1}위 ${nameOf.get(uid) ?? uid}  주간 ${(g / 1000).toFixed(3)}kg${mark}`)
   })
 }
+
+// 보너스 ② 우리 관계 steady♡ — 승인 인증 3회 달성 시 1kg (1인 1회)
+const STEADY_N = 3
+const STEADY_G = 1000
+console.log('\n=== 우리 관계 steady♡ (승인 인증 3회 달성 → +1kg, 1인 1회) ===')
+const seq = new Map()
+for (const c of certs) {
+  if (!seq.has(c.user_id)) seq.set(c.user_id, [])
+  seq.get(c.user_id).push(c)
+}
+let steadyN = 0
+for (const [uid, list] of [...seq.entries()].sort((a, b) => b[1].length - a[1].length)) {
+  if (list.length >= STEADY_N) {
+    steadyN++
+    expected.set(uid, (expected.get(uid) ?? 0) + STEADY_G)
+    console.log(
+      `   ✔ ${nameOf.get(uid) ?? uid}  승인 ${list.length}회` +
+        `  → 보너스 +${(STEADY_G / 1000).toFixed(2)}kg (${list[STEADY_N - 1].created_at.slice(0, 10)} 달성)`
+    )
+  } else {
+    console.log(`   · ${nameOf.get(uid) ?? uid}  승인 ${list.length}회  → ${STEADY_N - list.length}회 더 필요`)
+  }
+}
+console.log(`   합계: ${steadyN}명 · +${((steadyN * STEADY_G) / 1000).toFixed(2)}kg`)
 
 console.log('\n=== effective_reduction_g() 검산 (인증 + 확정 보너스) ===')
 let bad = 0

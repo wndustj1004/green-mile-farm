@@ -207,7 +207,10 @@ function BonusPanel({ bonuses }: { bonuses: BonusAward[] }) {
                 <p className="text-sm font-bold text-gm-ink2">
                   {info.icon} {b.title}
                 </p>
-                <p className="mt-1 text-xs text-gm-muted2">{info.label}</p>
+                {/* 제도 이름과 건별 제목이 같으면(예: steady♡) 중복 표시하지 않음 */}
+                {info.label !== b.title && (
+                  <p className="mt-1 text-xs text-gm-muted2">{info.label}</p>
+                )}
               </div>
               <span
                 className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${

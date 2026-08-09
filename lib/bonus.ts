@@ -33,6 +33,11 @@ export const BONUS_KIND: Record<string, { icon: string; label: string; note: str
     label: '주간 랭킹 보너스',
     note: '한 주(월~일) 감축량 상위 3명에게 그 주 감축량의 50%를 추가로 적립합니다. 주가 끝나야 순위가 확정되므로, 진행 중인 주는 “적립 예정”으로 표시됩니다.',
   },
+  steady3: {
+    icon: '💚',
+    label: '우리 관계 steady♡',
+    note: '기후위기 속 여름 폭염에도 꾸준히 참여해 주셔서 고마워요! 인증이 누적 3회가 되면 1kg CO₂를 한 번 적립합니다. (1인 1회, 3번째 인증과 동시에 바로 확정)',
+  },
 }
 
 export function kindInfo(kind: string) {
@@ -75,23 +80,24 @@ export function formatPeriod(start: string, end: string) {
 }
 
 /**
- * 적립 시각 → "2026년 7월 13일" (한국시간 기준)
- * 주간 보너스는 항상 월요일 0시에 확정되므로 자정이면 시각을 생략합니다.
- * 보는 사람의 기기 시간대와 무관하게 항상 한국시간으로 표시합니다.
+ * 적립 시각 → "2026년 7월 14일 오전 11:37" (한국시간 기준)
+ * 주간 보너스처럼 자정에 확정되는 건은 시각을 생략하고 날짜만 보여줍니다.
+ *
+ * ※ toLocaleString을 쓰지 않고 직접 조립합니다.
+ *   서버(Node)와 브라우저의 한국어 날짜 표기가 달라("AM" vs "오전")
+ *   같은 값이 화면마다 다르게 보이는 문제가 있었습니다.
  */
 export function formatAwardedAt(iso: string) {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
-  const kst = new Date(d.getTime() + 9 * 3600 * 1000)
-  const isMidnight = kst.getUTCHours() === 0 && kst.getUTCMinutes() === 0
-  return d.toLocaleString('ko-KR', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    ...(isMidnight ? {} : { hour: '2-digit' as const, minute: '2-digit' as const }),
-  })
+  const kst = new Date(d.getTime() + 9 * 3600 * 1000) // UTC 기준으로 읽으면 한국시간
+  const ymd = `${kst.getUTCFullYear()}년 ${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일`
+  const h = kst.getUTCHours()
+  const m = kst.getUTCMinutes()
+  if (h === 0 && m === 0) return ymd
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${ymd} ${h < 12 ? '오전' : '오후'} ${h12}:${String(m).padStart(2, '0')}`
 }
 
 export function sumSettledKg(list: { amount_g: number; settled: boolean }[]) {
