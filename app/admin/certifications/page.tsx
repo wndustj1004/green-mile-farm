@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
+import { toAdminBonusAward, type AdminBonusAward } from '@/lib/bonus'
 import CertActions from './CertActions'
+import AdminBonusList from './AdminBonusList'
 
 export const dynamic = 'force-dynamic'
 
 const PAGE_SIZE = 15
-type StatusFilter = 'all' | 'approved' | 'rejected'
+type StatusFilter = 'all' | 'approved' | 'rejected' | 'bonus'
 
 export default async function AdminCertsPage({
   searchParams,
@@ -16,9 +18,34 @@ export default async function AdminCertsPage({
   const supabase = createClient()
 
   const status: StatusFilter =
-    searchParams.status === 'approved' || searchParams.status === 'rejected'
+    searchParams.status === 'approved' ||
+    searchParams.status === 'rejected' ||
+    searchParams.status === 'bonus'
       ? searchParams.status
       : 'all'
+
+  // 보너스 탭 — 인증 목록 대신 보너스 적립 내역을 보여줌
+  if (status === 'bonus') {
+    const { data: raw } = await supabase.rpc('admin_bonus_awards')
+    const awards: AdminBonusAward[] = Array.isArray(raw)
+      ? (raw as Record<string, unknown>[]).map(toAdminBonusAward)
+      : []
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-xl font-bold text-gray-800">보너스 적립 내역 (총 {awards.length}건)</h1>
+          <div className="flex gap-1 text-xs">
+            <FilterTab label="전체" value="all" active={false} />
+            <FilterTab label="승인됨" value="approved" active={false} />
+            <FilterTab label="반려됨" value="rejected" active={false} />
+            <FilterTab label="🎁 보너스" value="bonus" active />
+          </div>
+        </div>
+        <AdminBonusList awards={awards} />
+      </div>
+    )
+  }
+
   const page = Math.max(1, Number(searchParams.page) || 1)
   const from = (page - 1) * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
@@ -68,6 +95,7 @@ export default async function AdminCertsPage({
           <FilterTab label="전체" value="all" active={status === 'all'} />
           <FilterTab label="승인됨" value="approved" active={status === 'approved'} />
           <FilterTab label="반려됨" value="rejected" active={status === 'rejected'} />
+          <FilterTab label="🎁 보너스" value="bonus" active={false} />
         </div>
       </div>
 

@@ -58,6 +58,8 @@ export default async function DashboardPage() {
   // 주간 랭킹 보너스(상위 3명 +50%, 완료된 주만) 포함 실효 감축량
   const { data: effRaw } = await supabase.rpc('effective_reduction_g', { uid: user.id })
   const totalKg = effRaw != null ? Number(effRaw) / 1000 : totalReducedG / 1000
+  // 누적 감축량에 이미 포함된 보너스 (내역은 /my 의 🎁 보너스 탭에서 확인)
+  const bonusKg = Math.max(totalKg - totalReducedG / 1000, 0)
 
   const growth = getGrowth(totalKg, targetKg)
 
@@ -158,6 +160,17 @@ export default async function DashboardPage() {
           <StatCard label="누적 이동" value={`${totalDistance.toFixed(1)}`} unit="km" />
           <StatCard label="누적 감축" value={`${totalKg.toFixed(2)}`} unit="kg" />
         </div>
+
+        {/* 보너스가 있으면 어디서 왔는지 바로 확인할 수 있게 안내 */}
+        {bonusKg >= 0.005 && (
+          <Link
+            href="/my"
+            className="mt-2 flex items-center justify-center gap-1.5 rounded-full bg-[#fffaf0] px-3 py-2 text-[11px] text-[#a1793a] hover:bg-[#fdf3e0]"
+          >
+            🎁 보너스 <b className="text-[#b45309]">+{bonusKg.toFixed(2)}kg</b> 포함
+            <span className="font-semibold underline">내역 보기</span>
+          </Link>
+        )}
 
         {/* 작물 성장 단계 슬라이더 (원본 그대로) */}
         <Reveal>

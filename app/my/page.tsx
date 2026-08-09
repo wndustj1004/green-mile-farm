@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { TRANSPORT_LABEL, type TransportKey } from '@/lib/transport'
+import { toBonusAward, sumSettledKg, type BonusAward } from '@/lib/bonus'
 import MyCertsList, { type CertRow } from './MyCertsList'
 
 export const dynamic = 'force-dynamic'
@@ -23,7 +24,16 @@ export default async function MyCertsPage() {
   const approved = rows.filter((c) => c.status === 'approved')
   const byTransport: Record<string, number> = {}
   for (const c of approved) byTransport[c.transport] = (byTransport[c.transport] ?? 0) + 1
-  const totalKg = approved.reduce((s, c) => s + Number(c.co2_reduced_g), 0) / 1000
+  const baseKg = approved.reduce((s, c) => s + Number(c.co2_reduced_g), 0) / 1000
+
+  // 보너스 적립 내역 (주간 랭킹 등) — 확정된 것만 누적 감축에 더함
+  const { data: bonusRaw } = await supabase.rpc('my_bonus_awards')
+  const bonuses: BonusAward[] = Array.isArray(bonusRaw)
+    ? (bonusRaw as Record<string, unknown>[]).map(toBonusAward)
+    : []
+  const bonusKg = sumSettledKg(bonuses)
+  // 대시보드의 누적 감축량과 같은 기준(기본 + 확정 보너스)
+  const totalKg = baseKg + bonusKg
 
   // 사진 서명 URL
   const paths: string[] = []
@@ -71,6 +81,14 @@ export default async function MyCertsPage() {
           <Summary label="누적 감축" value={totalKg.toFixed(2)} unit="kg" />
         </div>
 
+        {/* 누적 감축량 = 인증 감축 + 확정 보너스 (대시보드 숫자와 동일) */}
+        {bonusKg > 0 && (
+          <p className="mt-2 text-center text-[11px] text-gm-muted2">
+            누적 감축 = 인증 {baseKg.toFixed(2)}kg + 보너스{' '}
+            <b className="text-gm-green">{bonusKg.toFixed(2)}kg</b>
+          </p>
+        )}
+
         {/* 교통수단별 비율 */}
         <div className="mt-3.5 rounded-[18px] border border-gm-line bg-white p-[18px]">
           <p className="mb-3.5 text-sm font-bold text-gm-ink2">교통수단별 인증 비율</p>
@@ -95,8 +113,8 @@ export default async function MyCertsPage() {
           )}
         </div>
 
-        {/* 상태 필터 + 인증 내역 */}
-        <MyCertsList rows={certRows} />
+        {/* 상태 필터(승인·대기·반려·보너스) + 내역 */}
+        <MyCertsList rows={certRows} bonuses={bonuses} />
       </div>
     </main>
   )

@@ -1,4 +1,4 @@
-# 그린마일 팜 — 새 세션 인수인계 (2026-08-07 갱신)
+# 그린마일 팜 — 새 세션 인수인계 (2026-08-09 갱신)
 
 > 컨텍스트가 길어져 **새 대화창으로 이어가기 위한 문서**입니다.
 > 새 세션 시작 시 이 파일을 먼저 읽어달라고 요청하세요. (예: "HANDOFF.md 읽고 이어서 작업해줘")
@@ -23,7 +23,8 @@
 - **운영 배포 완료.** `main` = `419de37` (origin/main과 동기화). 로컬=원격=운영 일치.
 - GitHub: https://github.com/wndustj1004/green-mile-farm (main)
 - 라이브: https://green-mile-farm.vercel.app
-- **Supabase 마이그레이션 02~11 전부 DB 적용 완료**(REST로 확인함). 아래 4번 참고.
+- **Supabase 마이그레이션 02~12 전부 DB 적용 완료**(REST로 확인함). 아래 4번 참고.
+  (12는 2026-08-09 적용 — `scripts/check-bonus.mjs`로 검산 통과 확인함.)
 - **관리자 상태 점검 시스템 가동 중** — `/admin/health`, 매일 KST 오후 8시대 자동. 아래 5번 참고.
 - **배출계수 현재값**(2026-08-07 기준): 승용차 211.1 / 걷기 0 / 자전거 0 / 버스 29.1 / **지하철 1.53**.
   ※ 7/24에 지하철이 28.7로 잘못 들어가 버스와 거의 같아졌던 것을 8/7에 1.53으로 복원함.
@@ -38,7 +39,7 @@
 - **Vercel Cron**(`vercel.json`): `/api/health`를 `0 11 * * *`(UTC) = **KST 오후 8시대** 하루 1회 실행.
   Hobby 플랜 상한 = **하루 1회·시각 ±59분·실패 시 재시도 없음**(공식 문서 확인). Cron은 **운영(Production) 배포에서만** 동작.
 - **카카오 콘솔** Web 도메인: `localhost:3000`, `green-mile-farm.vercel.app` 등록됨. (Vercel **프리뷰 브랜치 URL**은 도메인 미등록 → 프리뷰에선 지도 안 뜸, 운영은 정상)
-- **SQL은 코드 배포와 별개**: 새 마이그레이션 파일 만들면 사용자가 Supabase SQL Editor에서 **직접 실행**해야 함. `supabase/NN_*.sql`. (02~10 이미 실행됨)
+- **SQL은 코드 배포와 별개**: 새 마이그레이션 파일 만들면 사용자가 Supabase SQL Editor에서 **직접 실행**해야 함. `supabase/NN_*.sql`. (02~12 이미 실행됨)
 
 ## 5. 아키텍처 · 주요 기능 (파일 위치)
 ### 메인페이지 `app/page.tsx` (섹션 순서)
@@ -60,6 +61,17 @@
 ### 관리자 인증 심사 `app/admin/certifications/`
 `CertActions.tsx` — 승인(모달에서 **이동거리 수정** 가능, CO₂ 재계산·이력 기록) / 반려(사유 모달). 액션=`app/admin/actions.ts`의 `reviewCert`.
 
+### 보너스 적립 내역 (2026-08-09 추가)
+주간 랭킹 상위 3명 +50% 보너스가 **대시보드 숫자에만 녹아 있어** 확인이 불가능하던 문제를 해결.
+- **저장하지 않고 계산함**: 보너스 전용 표를 만들지 않고 `certifications`에서 매번 계산 → 인증 반려·거리 수정 시 자동 재계산, 중복/누락 불가. SQL = **`supabase/12_bonus_awards.sql`**.
+- 함수 4개: `bonus_awards_all()`(내부 전용, 권한 회수) / `my_bonus_awards()`(본인) / `admin_bonus_awards()`(관리자만, 아니면 `[]`) / `effective_reduction_g(uid)`(**07을 대체**, 확정 보너스만 합산 — 결과값은 07과 동일).
+- **확정(settled) vs 예정**: 주가 끝나야(월요일 0시 KST) 순위가 확정 → 진행 중인 주는 `settled=false`로 "적립 예정" 표시만 하고 누적 감축·작물 성장엔 **미반영**.
+- 화면 ① 사용자 `/my` — 필터칩에 **🎁 보너스** 추가(`app/my/MyCertsList.tsx`의 `BonusPanel`). 상단 "누적 감축"도 대시보드와 동일하게 **보너스 포함** 값으로 통일(그 전엔 인증분만 표시해 두 화면 숫자가 달랐음).
+- 화면 ② 관리자 `/admin/certifications?status=bonus` — `AdminBonusList.tsx`. 요약3 + 참가자별 합계표 + 상세표(적립 날짜·대상 기간·참가자·이벤트·산정 근거·적립량·상태).
+- 화면 ③ 대시보드 — 누적 통계 아래 "🎁 보너스 +N kg 포함 · 내역 보기" 링크(`/my`).
+- 타입·표시 규칙은 **`lib/bonus.ts`** 한 곳(`BONUS_KIND` 맵). 검산 스크립트 `node --env-file=.env.local scripts/check-bonus.mjs`.
+- ★ **새 보너스 제도 추가 방법**: ① `bonus_awards_all()` 마지막 select에 `union all`로 새 블록 추가(`kind` 값만 새로 정함) ② `lib/bonus.ts`의 `BONUS_KIND`에 아이콘·라벨·설명 한 줄 추가. **화면 코드는 손댈 필요 없음.**
+
 ### 관리자 상태 점검 `/admin/health` (2026-08-07 추가)
 서버·DB 안정성과 데이터 무결성을 자동 확인. **신호등 🟢정상/🟡주의/🔴위험 + 한국어 설명 + "무엇을 하면 되나요" 조치 안내**로 표시.
 - **점검 31항목** — `lib/health/infra.ts`(A1~A9: 연결·RPC 3종·Storage 2·Auth·환경변수·배포버전) /
@@ -75,7 +87,8 @@
 ### 서버 함수/RPC (전부 DB 적용됨)
 - `challenge_stats()`(05) — 공개 집계(참여자·총감축kg·수확자). 관리자 통계와 동일 공식.
 - `weekly_ranking()`(06) — 주간 상위6(월~현재 KST, 수확자 제외, 상위3 표시 ×1.5, 이름 마스킹+이메일아이디).
-- `effective_reduction_g(uid)`(07) — 완료된 주 상위3 +50% 보너스 포함 실효 감축량(대시보드 작물 성장에 반영).
+- `effective_reduction_g(uid)`(07 → **12에서 재정의**) — 완료된 주 상위3 +50% 보너스 포함 실효 감축량(대시보드 작물 성장에 반영).
+- **보너스 내역(12)** — `bonus_awards_all()`(내부) / `my_bonus_awards()` / `admin_bonus_awards()`. 위 "보너스 적립 내역" 참고.
 - 이름변경 컬럼(08 `profiles.name_changed_at`), 거리수정 컬럼(10 `certifications.original_distance_km`·`distance_edit_reason`·`distance_edited_by`·`distance_edited_at`).
 - **상태 점검(11)** — `health_logs` 표(RLS: 조회는 관리자만, 기록은 서비스 롤만) + 읽기 전용 함수 3개
   `health_db_stats()`(DB·표별 용량) / `health_storage_stats()`(버킷별 파일수·용량) / `health_photo_audit()`(DB 사진경로 ↔ 실제 파일 양방향 대조).
