@@ -59,7 +59,13 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-5 text-center text-[13px] text-gm-muted2">
+          <p className="mt-4 text-center text-[13px]">
+            <Link href="/login/find" className="text-gm-muted2 hover:text-gm-green hover:underline">
+              아이디 · 비밀번호를 잊으셨나요?
+            </Link>
+          </p>
+
+          <p className="mt-3 text-center text-[13px] text-gm-muted2">
             아직 회원이 아니신가요?{' '}
             <Link href="/signup" className="font-bold text-gm-green hover:underline">
               회원가입
