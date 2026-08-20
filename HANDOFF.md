@@ -20,7 +20,7 @@
 - 코드 변경 시 **기능 로직은 보존, 겉모습만** 바꾸는 게 기본 원칙.
 
 ## 3. 현재 상태 (★중요)
-- **운영 배포 완료.** `main` = `f55be98` (origin/main과 동기화). 로컬=원격=운영 일치.
+- **운영 배포 완료.** `main` = `50fc4c4` (origin/main과 동기화). 로컬=원격=운영 일치.
 - GitHub: https://github.com/wndustj1004/green-mile-farm (main)
 - 라이브: https://green-mile-farm.vercel.app
 - **Supabase 마이그레이션 02~13 전부 DB 적용 완료**(REST로 확인함). 아래 4번 참고.
