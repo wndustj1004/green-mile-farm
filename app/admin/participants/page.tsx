@@ -1,17 +1,19 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import type { AdminBonusAward } from '@/lib/bonus'
 
 export const dynamic = 'force-dynamic'
 
 // 정렬할 수 있는 숫자 열 — 표의 열 제목을 누르면 엑셀처럼 정렬됩니다.
-const SORT_KEYS = ['count', 'dist', 'kg'] as const
+const SORT_KEYS = ['count', 'dist', 'kg', 'totalKg'] as const
 type SortKey = (typeof SORT_KEYS)[number]
 type SortDir = 'desc' | 'asc'
 
 const SORT_LABEL: Record<SortKey, string> = {
   count: '인증 횟수',
   dist: '이동 거리',
-  kg: '감축량',
+  kg: '순감축량',
+  totalKg: '감축량(이벤트 포함)',
 }
 
 export default async function ParticipantsPage({
@@ -41,6 +43,15 @@ export default async function ParticipantsPage({
     .select('user_id, distance_km, co2_reduced_g, status')
     .eq('status', 'approved')
 
+  // 이벤트 적립(주간 랭킹·steady♡ 등) — 대시보드·/my와 같은 함수를 씁니다.
+  // 확정(settled)된 것만 더합니다. 진행 중인 주의 "적립 예정"은 아직 순위에 넣지 않음.
+  const { data: bonusRaw } = await supabase.rpc('admin_bonus_awards')
+  const bonusG = new Map<string, number>()
+  for (const b of (bonusRaw ?? []) as AdminBonusAward[]) {
+    if (!b.settled) continue
+    bonusG.set(b.user_id, (bonusG.get(b.user_id) ?? 0) + Number(b.amount_g))
+  }
+
   // 1인당 집계
   const agg = new Map<string, { count: number; dist: number; g: number }>()
   for (const c of certs ?? []) {
@@ -53,8 +64,13 @@ export default async function ParticipantsPage({
 
   let list = (profiles ?? []).map((p) => {
     const a = agg.get(p.id) ?? { count: 0, dist: 0, g: 0 }
-    const kg = a.g / 1000
-    return { ...p, count: a.count, dist: a.dist, kg, harvested: kg >= targetKg }
+    const kg = a.g / 1000 // 순감축량 = 인증분만
+    const bonus = (bonusG.get(p.id) ?? 0) / 1000
+    // 감축량 = 순감축량 + 확정된 이벤트 적립 (보상 인원 선정 기준)
+    const totalKg = kg + bonus
+    // ※ 수확(🍅) 판정은 지금까지처럼 '인증분만'으로 합니다.
+    //   보너스 산정이 수확 여부를 참조하므로, 여기에 보너스를 넣으면 서로 물고 도는 계산이 됩니다.
+    return { ...p, count: a.count, dist: a.dist, kg, bonus, totalKg, harvested: kg >= targetKg }
   })
   if (onlyHarvested) list = list.filter((p) => p.harvested)
 
@@ -118,7 +134,20 @@ export default async function ParticipantsPage({
               <th className="px-3 py-2">연락처</th>
               <SortableTh label="인증" href={sortHref('count')} active={sortKey === 'count'} dir={sortDir} />
               <SortableTh label="거리" href={sortHref('dist')} active={sortKey === 'dist'} dir={sortDir} />
-              <SortableTh label="감축" href={sortHref('kg')} active={sortKey === 'kg'} dir={sortDir} />
+              <SortableTh
+                label="순감축량"
+                title="인증분만 합한 값 (이벤트 적립 제외)"
+                href={sortHref('kg')}
+                active={sortKey === 'kg'}
+                dir={sortDir}
+              />
+              <SortableTh
+                label="감축량"
+                title="순감축량 + 확정된 이벤트 적립 — 보상 인원 선정 기준"
+                href={sortHref('totalKg')}
+                active={sortKey === 'totalKg'}
+                dir={sortDir}
+              />
               <th className="px-3 py-2 text-center">수확</th>
             </tr>
           </thead>
@@ -131,12 +160,20 @@ export default async function ParticipantsPage({
                 <td className={cellCls(sortKey === 'count')}>{p.count}회</td>
                 <td className={cellCls(sortKey === 'dist')}>{p.dist.toFixed(1)}km</td>
                 <td className={cellCls(sortKey === 'kg')}>{p.kg.toFixed(2)}kg</td>
+                <td className={cellCls(sortKey === 'totalKg')}>
+                  {p.totalKg.toFixed(2)}kg
+                  {p.bonus > 0 && (
+                    <span className="ml-1 text-xs font-normal text-gray-400">
+                      (+{p.bonus.toFixed(2)})
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2 text-center">{p.harvested ? '🍅' : '–'}</td>
               </tr>
             ))}
             {list.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-gray-400">
+                <td colSpan={8} className="px-3 py-6 text-center text-gray-400">
                   해당하는 참가자가 없습니다.
                 </td>
               </tr>
@@ -171,17 +208,20 @@ function SortableTh({
   href,
   active,
   dir,
+  title,
 }: {
   label: string
   href: string
   active: boolean
   dir: SortDir
+  /** 마우스를 올렸을 때 뜨는 설명 (없으면 기본 문구) */
+  title?: string
 }) {
   return (
-    <th className="px-3 py-2 text-right">
+    <th className="whitespace-nowrap px-3 py-2 text-right">
       <Link
         href={href}
-        title={`${label} 기준으로 정렬`}
+        title={title ?? `${label} 기준으로 정렬`}
         className={`inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-gray-100 ${
           active ? 'font-bold text-green-700' : 'text-gray-400'
         }`}
