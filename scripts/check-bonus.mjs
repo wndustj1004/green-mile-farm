@@ -44,11 +44,18 @@ for (const c of certs) {
 }
 
 const curWk = weekStartKST(new Date().toISOString())
+// 오늘(한국시간) 날짜 — 챌린지 마감 여부 판정용
+const todayKST = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10)
+// 마감일이 지났으면 남은 주도 확정으로 본다 (14번 SQL 규칙과 동일)
+const challengeOver = !!settings.challenge_end && todayKST > settings.challenge_end
+if (challengeOver)
+  console.log(`※ 챌린지 마감(${settings.challenge_end}) 이후 — 남은 주도 확정 처리됩니다.
+`)
 const expected = new Map() // user -> 확정 보너스 합계(g)
 
 console.log('=== 주별 랭킹과 보너스 (수확 도달자 제외) ===')
 for (const wk of [...weekly.keys()].sort()) {
-  const done = wk < curWk
+  const done = wk < curWk || challengeOver
   const rows = [...weekly.get(wk).entries()]
     .filter(([uid]) => (totals.get(uid) ?? 0) < targetG)
     .sort((a, b) => b[1] - a[1])
